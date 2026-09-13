@@ -111,6 +111,59 @@ h1, h2 { font-family: var(--display); }
   color: var(--coach-red-deep);
 }
 
+.pass-number-input,
+.pass-title-input,
+.pass-station-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  border-radius: 0;
+  padding: 2px 0;
+  color: inherit;
+  font-family: inherit;
+}
+.pass-number-input:hover, .pass-number-input:focus,
+.pass-title-input:hover, .pass-title-input:focus,
+.pass-station-input:hover, .pass-station-input:focus {
+  border-bottom-color: var(--coach-red);
+  outline: none;
+}
+.pass-number-input::placeholder,
+.pass-title-input::placeholder,
+.pass-station-input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.pass-number-input {
+  background: var(--coach-red);
+  color: var(--cream);
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 4px;
+  font-size: 0.92rem;
+  width: 90px;
+  border-bottom: none;
+}
+.pass-number-input::placeholder { color: rgba(246, 236, 212, 0.75); }
+.pass-number-input:hover, .pass-number-input:focus { border-bottom: none; filter: brightness(1.1); }
+
+.pass-title-input {
+  display: block;
+  width: 100%;
+  font-family: var(--display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--coach-red-deep);
+  margin: 0 0 14px;
+}
+
+.pass-station-input {
+  font-size: 0.85rem;
+  color: var(--steel);
+  width: 150px;
+}
+
 .pass-route {
   display: flex;
   align-items: center;
@@ -179,6 +232,21 @@ h1, h2 { font-family: var(--display); }
   font-size: inherit;
   cursor: pointer;
 }
+
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.track-msg {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.track-msg.error { color: var(--red-alert); }
+.track-msg.success { color: var(--green); }
 
 .pass-fields {
   display: grid;
