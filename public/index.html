@@ -5,71 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Wait2Seat — Live Berth Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Zilla+Slab:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <header class="board-header">
-    <div class="header-left">
-      <span class="dot"></span>
-      <h1>WAIT2SEAT</h1>
-      <span class="subtitle">Smart Berth Alert &amp; Route Assistant</span>
+  <!-- HERO: split-flap style departure board -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-kicker">Live berth board</p>
+      <h1 class="hero-title">12345 · Kanpur Superfast Express</h1>
+      <p class="hero-route">KANPUR <span class="hero-arrow">→</span> DELHI</p>
+
+      <div class="flap-board" id="flapBoard" aria-live="polite">
+        <div class="flap-row">
+          <span class="flap-label">next up</span>
+          <span class="flap-value" id="flapName">— — —</span>
+        </div>
+        <div class="flap-row">
+          <span class="flap-label">berth</span>
+          <span class="flap-value mono" id="flapSeat">— —</span>
+        </div>
+        <div class="flap-row">
+          <span class="flap-label">status</span>
+          <span class="flap-value" id="flapStatus">Waiting</span>
+        </div>
+      </div>
     </div>
-    <div class="header-right" id="clock">--:--:--</div>
-  </header>
+  </section>
 
   <main class="layout">
 
-    <!-- Train info + berth trigger -->
-    <section class="panel train-panel">
-      <h2>12345 · Kanpur Superfast Express</h2>
-      <p class="route-line">KANPUR <span class="arrow">→</span> DELHI</p>
-      <div class="berth-action">
-        <label for="seatLabel">Berth freed up:</label>
-        <input id="seatLabel" type="text" placeholder="e.g. B3-45" value="B3-45" />
-        <button id="freeBerthBtn">Simulate berth release</button>
-      </div>
-      <p class="hint">This mimics a confirmed passenger cancelling — it should alert the top of the queue.</p>
-    </section>
+    <!-- LEFT: primary column — queue + claim -->
+    <div class="col-main">
 
-    <!-- Live departure-board style queue -->
-    <section class="panel queue-panel">
-      <h2>Live Waitlist Queue</h2>
-      <div class="board-head">
-        <span>RANK</span><span>NAME</span><span>PNR</span><span>STATUS</span><span>ACTION</span>
-      </div>
-      <div id="queueBoard" class="board-body">
-        <p class="empty-msg">Loading queue…</p>
-      </div>
-    </section>
+      <section class="panel queue-panel">
+        <div class="panel-head">
+          <h2>Waitlist queue</h2>
+          <div class="berth-action">
+            <input id="seatLabel" class="mono" type="text" placeholder="B3-45" value="B3-45" />
+            <button id="freeBerthBtn">Release a berth</button>
+          </div>
+        </div>
+        <p class="panel-sub">Ordered by priority — WL1 is always served before WL2, WL3, and so on.</p>
 
-    <!-- Seat claim / countdown -->
-    <section class="panel claim-panel" id="claimPanel" hidden>
-      <h2>Berth Offered</h2>
-      <p id="claimText">—</p>
-      <div class="countdown" id="countdown">200</div>
-      <p class="hint">seconds remaining to claim before it cascades to the next in queue</p>
-      <button id="claimBtn">Claim this seat</button>
-      <p id="claimResult"></p>
-    </section>
+        <div class="board-head">
+          <span>Rank</span><span>Passenger</span><span class="hide-sm">PNR</span><span>Class</span><span class="hide-sm">Journey</span>
+        </div>
+        <div id="queueBoard" class="board-body">
+          <p class="empty-msg">Loading queue…</p>
+        </div>
+      </section>
 
-    <!-- NLP.js chatbot -->
-    <section class="panel chat-panel">
-      <h2>Route Assistant</h2>
-      <p class="hint">Ask for an alternate multi-leg route if a direct train isn't available.</p>
-      <div class="chat-window" id="chatWindow">
-        <div class="msg bot">Hi! Tell me your boarding and destination stations, or just ask "suggest an alternate route".</div>
-      </div>
-      <div class="chat-inputs">
-        <input id="fromInput" placeholder="From (e.g. Kanpur)" />
-        <input id="toInput" placeholder="To (e.g. Delhi)" />
-      </div>
-      <div class="chat-send-row">
-        <input id="chatInput" placeholder="Type a message…" />
-        <button id="chatSendBtn">Send</button>
-      </div>
-    </section>
+      <!-- Claim panel: only shown when a berth has been offered -->
+      <section class="panel claim-panel" id="claimPanel" hidden>
+        <p class="claim-label">Berth offered to</p>
+        <p class="claim-name" id="claimText">—</p>
+        <div class="countdown" id="countdown">200</div>
+        <p class="panel-sub">seconds left to claim, or it passes to the next passenger</p>
+        <button id="claimBtn">Claim this seat</button>
+        <p id="claimResult" class="claim-result"></p>
+      </section>
+
+    </div>
+
+    <!-- RIGHT: secondary column — route assistant -->
+    <aside class="col-side">
+      <section class="panel chat-panel">
+        <h2>Route assistant</h2>
+        <p class="panel-sub">Ask for an alternate route if a direct train isn't available.</p>
+
+        <div class="chat-window" id="chatWindow">
+          <div class="msg bot">Tell me your boarding and destination stations, or just ask "suggest an alternate route".</div>
+        </div>
+
+        <div class="chat-inputs">
+          <input id="fromInput" placeholder="From" />
+          <input id="toInput" placeholder="To" />
+        </div>
+        <div class="chat-send-row">
+          <input id="chatInput" placeholder="Type a message…" />
+          <button id="chatSendBtn">Send</button>
+        </div>
+      </section>
+    </aside>
 
   </main>
 
