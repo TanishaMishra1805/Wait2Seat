@@ -6,7 +6,7 @@
 <title>Wait2Seat — 12345 Kanpur Superfast Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
 
@@ -30,23 +30,23 @@
       <div class="pass-main">
         <div class="pass-top">
           <span class="pass-tag">Live berth clearance pass</span>
-          <span class="pass-number mono">12345</span>
+          <input id="trainNumberInput" class="pass-number-input mono" placeholder="Train no." inputmode="numeric" maxlength="6" />
         </div>
 
-        <h1>Kanpur Superfast Express</h1>
+        <input id="trainNameInput" class="pass-title-input" placeholder="Enter train name" />
 
         <div class="pass-route">
-          <span class="pass-station">Kanpur Central</span>
+          <input id="fromStationInput" class="pass-station-input" placeholder="Boarding station" />
           <span class="pass-track" aria-hidden="true">
             <span class="pass-track-line"></span>
             <span class="pass-track-dot"></span>
           </span>
-          <span class="pass-station" id="routeDestination">New Delhi</span>
+          <input id="toStationInput" class="pass-station-input" placeholder="Destination station" />
         </div>
 
         <div class="destination-filter">
-          <label for="destinationFilter">Going to</label>
-          <input id="destinationFilter" list="destinationOptions" class="mono" placeholder="Type a destination…" autocomplete="off" />
+          <label for="destinationFilter">Filter queue by destination</label>
+          <input id="destinationFilter" list="destinationOptions" class="mono" placeholder="Any destination" autocomplete="off" />
           <datalist id="destinationOptions"></datalist>
           <button type="button" id="clearDestinationBtn" class="ghost-btn">All stations</button>
         </div>
@@ -62,7 +62,7 @@
           </div>
           <div class="pass-field">
             <span class="pass-field-label">Status</span>
-            <span class="pass-field-value" id="flapStatus">Waiting</span>
+            <span class="pass-field-value" id="flapStatus">Enter a train number</span>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@
       <div class="pass-stub">
         <span class="pass-stub-tag">LIVE</span>
         <div class="pass-barcode" aria-hidden="true"></div>
-        <span class="pass-stub-code mono">WL·12345</span>
+        <span class="pass-stub-code mono" id="stubCode">WL · — —</span>
       </div>
 
     </div>
@@ -89,7 +89,7 @@
           </div>
           <div class="berth-action">
             <label for="seatLabel">Berth freed</label>
-            <input id="seatLabel" class="mono" type="text" placeholder="B3-45" value="B3-45" />
+            <input id="seatLabel" class="mono" type="text" placeholder="B3-45" />
             <button id="freeBerthBtn">Release berth</button>
           </div>
         </div>
