@@ -1,0 +1,21 @@
+{
+  "name": "wait2seat",
+  "version": "1.0.0",
+  "description": "Smart Railway Seat Alert & Route Assistant - notifies waitlisted passengers when a berth opens, runs priority-based queue logic (WL1 first), handles a 200-second seat claim window, and suggests alternate multi-leg routes with fare breakdown via an NLP chatbot.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node config/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.5.0",
+    "node-nlp": "^4.27.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

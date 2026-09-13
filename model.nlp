@@ -1,0 +1,1097 @@
+{
+  "settings": {
+    "languages": [
+      "en"
+    ],
+    "forceNER": true,
+    "tag": "nlp",
+    "threshold": 0.5,
+    "autoLoad": true,
+    "autoSave": true,
+    "modelFileName": "model.nlp",
+    "executeActionsBeforeAnswers": false,
+    "calculateSentiment": true
+  },
+  "nluManager": {
+    "settings": {
+      "tag": "nlu-manager"
+    },
+    "locales": [
+      "en"
+    ],
+    "languageNames": {},
+    "domainManagers": {
+      "en": {
+        "settings": {
+          "locale": "en",
+          "trainByDomain": false,
+          "tag": "domain-manager-en",
+          "nluByDomain": {
+            "default": {
+              "className": "NeuralNlu",
+              "settings": {}
+            }
+          },
+          "useStemDict": true
+        },
+        "stemDict": {
+          "altern,an,rout,suggest": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "anoth,find,reach,to,way": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "leg,me,multi,show,train": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "anoth,is,rout,there": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "connect,give,me,train": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "are,avail,direct,my,no,option,train,what": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "can,els,how,i,travel": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "break,journey,my": {
+            "intent": "route.alternate",
+            "domain": "default"
+          },
+          "fare,is,the,what": {
+            "intent": "route.fare",
+            "domain": "default"
+          },
+          "cost,how,it,much,will": {
+            "intent": "route.fare",
+            "domain": "default"
+          },
+          "breakdown,fare,give,me": {
+            "intent": "route.fare",
+            "domain": "default"
+          },
+          "for,price,rout,this,ticket": {
+            "intent": "route.fare",
+            "domain": "default"
+          },
+          "cost,journey,of,the,total": {
+            "intent": "route.fare",
+            "domain": "default"
+          },
+          "is,my,status,waitlist,what": {
+            "intent": "status.check",
+            "domain": "default"
+          },
+          "check,my,posit,queue": {
+            "intent": "status.check",
+            "domain": "default"
+          },
+          "do,i,in,queue,stand,the,where": {
+            "intent": "status.check",
+            "domain": "default"
+          },
+          "am,confirm,i,yet": {
+            "intent": "status.check",
+            "domain": "default"
+          },
+          "hi": {
+            "intent": "greeting",
+            "domain": "default"
+          },
+          "hello": {
+            "intent": "greeting",
+            "domain": "default"
+          },
+          "hey": {
+            "intent": "greeting",
+            "domain": "default"
+          },
+          "good,morn": {
+            "intent": "greeting",
+            "domain": "default"
+          },
+          "even,good": {
+            "intent": "greeting",
+            "domain": "default"
+          }
+        },
+        "intentDict": {
+          "route.alternate": "default",
+          "route.fare": "default",
+          "status.check": "default",
+          "greeting": "default"
+        },
+        "sentences": [
+          {
+            "domain": "default",
+            "utterance": "suggest an alternate route",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "find another way to reach",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "show me multi leg trains",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "is there another route",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "give me connecting trains",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "no direct train available what are my options",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "how else can I travel",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "break my journey",
+            "intent": "route.alternate"
+          },
+          {
+            "domain": "default",
+            "utterance": "what is the fare",
+            "intent": "route.fare"
+          },
+          {
+            "domain": "default",
+            "utterance": "how much will it cost",
+            "intent": "route.fare"
+          },
+          {
+            "domain": "default",
+            "utterance": "give me fare breakdown",
+            "intent": "route.fare"
+          },
+          {
+            "domain": "default",
+            "utterance": "ticket price for this route",
+            "intent": "route.fare"
+          },
+          {
+            "domain": "default",
+            "utterance": "total cost of the journey",
+            "intent": "route.fare"
+          },
+          {
+            "domain": "default",
+            "utterance": "what is my waitlist status",
+            "intent": "status.check"
+          },
+          {
+            "domain": "default",
+            "utterance": "check my queue position",
+            "intent": "status.check"
+          },
+          {
+            "domain": "default",
+            "utterance": "where do I stand in the queue",
+            "intent": "status.check"
+          },
+          {
+            "domain": "default",
+            "utterance": "am I confirmed yet",
+            "intent": "status.check"
+          },
+          {
+            "domain": "default",
+            "utterance": "hi",
+            "intent": "greeting"
+          },
+          {
+            "domain": "default",
+            "utterance": "hello",
+            "intent": "greeting"
+          },
+          {
+            "domain": "default",
+            "utterance": "hey",
+            "intent": "greeting"
+          },
+          {
+            "domain": "default",
+            "utterance": "good morning",
+            "intent": "greeting"
+          },
+          {
+            "domain": "default",
+            "utterance": "good evening",
+            "intent": "greeting"
+          }
+        ],
+        "domains": {
+          "master_domain": {
+            "settings": {
+              "locale": "en",
+              "tag": "nlu-en",
+              "keepStopwords": true,
+              "nonefeatureValue": 1,
+              "nonedeltaMultiplier": 1.2,
+              "spellCheck": false,
+              "spellCheckDistance": 1,
+              "filterZeros": true,
+              "log": true
+            },
+            "features": {
+              "suggest": 1,
+              "an": 1,
+              "altern": 1,
+              "rout": 1,
+              "find": 1,
+              "anoth": 1,
+              "way": 1,
+              "to": 1,
+              "reach": 1,
+              "show": 1,
+              "me": 1,
+              "multi": 1,
+              "leg": 1,
+              "train": 1,
+              "is": 1,
+              "there": 1,
+              "give": 1,
+              "connect": 1,
+              "no": 1,
+              "direct": 1,
+              "avail": 1,
+              "what": 1,
+              "are": 1,
+              "my": 1,
+              "option": 1,
+              "how": 1,
+              "els": 1,
+              "can": 1,
+              "i": 1,
+              "travel": 1,
+              "break": 1,
+              "journey": 1,
+              "the": 1,
+              "fare": 1,
+              "much": 1,
+              "will": 1,
+              "it": 1,
+              "cost": 1,
+              "breakdown": 1,
+              "ticket": 1,
+              "price": 1,
+              "for": 1,
+              "this": 1,
+              "total": 1,
+              "of": 1,
+              "waitlist": 1,
+              "status": 1,
+              "check": 1,
+              "queue": 1,
+              "posit": 1,
+              "where": 1,
+              "do": 1,
+              "stand": 1,
+              "in": 1,
+              "am": 1,
+              "confirm": 1,
+              "yet": 1,
+              "hi": 1,
+              "hello": 1,
+              "hey": 1,
+              "good": 1,
+              "morn": 1,
+              "even": 1
+            },
+            "intents": {
+              "route.alternate": 1,
+              "route.fare": 1,
+              "status.check": 1,
+              "greeting": 1
+            },
+            "intentFeatures": {
+              "route.alternate": {
+                "suggest": 1,
+                "an": 1,
+                "altern": 1,
+                "rout": 1,
+                "find": 1,
+                "anoth": 1,
+                "way": 1,
+                "to": 1,
+                "reach": 1,
+                "show": 1,
+                "me": 1,
+                "multi": 1,
+                "leg": 1,
+                "train": 1,
+                "is": 1,
+                "there": 1,
+                "give": 1,
+                "connect": 1,
+                "no": 1,
+                "direct": 1,
+                "avail": 1,
+                "what": 1,
+                "are": 1,
+                "my": 1,
+                "option": 1,
+                "how": 1,
+                "els": 1,
+                "can": 1,
+                "i": 1,
+                "travel": 1,
+                "break": 1,
+                "journey": 1
+              },
+              "route.fare": {
+                "what": 1,
+                "is": 1,
+                "the": 1,
+                "fare": 1,
+                "how": 1,
+                "much": 1,
+                "will": 1,
+                "it": 1,
+                "cost": 1,
+                "give": 1,
+                "me": 1,
+                "breakdown": 1,
+                "ticket": 1,
+                "price": 1,
+                "for": 1,
+                "this": 1,
+                "rout": 1,
+                "total": 1,
+                "of": 1,
+                "journey": 1
+              },
+              "status.check": {
+                "what": 1,
+                "is": 1,
+                "my": 1,
+                "waitlist": 1,
+                "status": 1,
+                "check": 1,
+                "queue": 1,
+                "posit": 1,
+                "where": 1,
+                "do": 1,
+                "i": 1,
+                "stand": 1,
+                "in": 1,
+                "the": 1,
+                "am": 1,
+                "confirm": 1,
+                "yet": 1
+              },
+              "greeting": {
+                "hi": 1,
+                "hello": 1,
+                "hey": 1,
+                "good": 1,
+                "morn": 1,
+                "even": 1
+              }
+            },
+            "featuresToIntent": {
+              "suggest": [
+                "route.alternate"
+              ],
+              "an": [
+                "route.alternate"
+              ],
+              "altern": [
+                "route.alternate"
+              ],
+              "rout": [
+                "route.alternate",
+                "route.fare"
+              ],
+              "find": [
+                "route.alternate"
+              ],
+              "anoth": [
+                "route.alternate"
+              ],
+              "way": [
+                "route.alternate"
+              ],
+              "to": [
+                "route.alternate"
+              ],
+              "reach": [
+                "route.alternate"
+              ],
+              "show": [
+                "route.alternate"
+              ],
+              "me": [
+                "route.alternate",
+                "route.fare"
+              ],
+              "multi": [
+                "route.alternate"
+              ],
+              "leg": [
+                "route.alternate"
+              ],
+              "train": [
+                "route.alternate"
+              ],
+              "is": [
+                "route.alternate",
+                "route.fare",
+                "status.check"
+              ],
+              "there": [
+                "route.alternate"
+              ],
+              "give": [
+                "route.alternate",
+                "route.fare"
+              ],
+              "connect": [
+                "route.alternate"
+              ],
+              "no": [
+                "route.alternate"
+              ],
+              "direct": [
+                "route.alternate"
+              ],
+              "avail": [
+                "route.alternate"
+              ],
+              "what": [
+                "route.alternate",
+                "route.fare",
+                "status.check"
+              ],
+              "are": [
+                "route.alternate"
+              ],
+              "my": [
+                "route.alternate",
+                "status.check"
+              ],
+              "option": [
+                "route.alternate"
+              ],
+              "how": [
+                "route.alternate",
+                "route.fare"
+              ],
+              "els": [
+                "route.alternate"
+              ],
+              "can": [
+                "route.alternate"
+              ],
+              "i": [
+                "route.alternate",
+                "status.check"
+              ],
+              "travel": [
+                "route.alternate"
+              ],
+              "break": [
+                "route.alternate"
+              ],
+              "journey": [
+                "route.alternate",
+                "route.fare"
+              ],
+              "the": [
+                "route.fare",
+                "status.check"
+              ],
+              "fare": [
+                "route.fare"
+              ],
+              "much": [
+                "route.fare"
+              ],
+              "will": [
+                "route.fare"
+              ],
+              "it": [
+                "route.fare"
+              ],
+              "cost": [
+                "route.fare"
+              ],
+              "breakdown": [
+                "route.fare"
+              ],
+              "ticket": [
+                "route.fare"
+              ],
+              "price": [
+                "route.fare"
+              ],
+              "for": [
+                "route.fare"
+              ],
+              "this": [
+                "route.fare"
+              ],
+              "total": [
+                "route.fare"
+              ],
+              "of": [
+                "route.fare"
+              ],
+              "waitlist": [
+                "status.check"
+              ],
+              "status": [
+                "status.check"
+              ],
+              "check": [
+                "status.check"
+              ],
+              "queue": [
+                "status.check"
+              ],
+              "posit": [
+                "status.check"
+              ],
+              "where": [
+                "status.check"
+              ],
+              "do": [
+                "status.check"
+              ],
+              "stand": [
+                "status.check"
+              ],
+              "in": [
+                "status.check"
+              ],
+              "am": [
+                "status.check"
+              ],
+              "confirm": [
+                "status.check"
+              ],
+              "yet": [
+                "status.check"
+              ],
+              "hi": [
+                "greeting"
+              ],
+              "hello": [
+                "greeting"
+              ],
+              "hey": [
+                "greeting"
+              ],
+              "good": [
+                "greeting"
+              ],
+              "morn": [
+                "greeting"
+              ],
+              "even": [
+                "greeting"
+              ]
+            },
+            "neuralNetwork": {
+              "settings": {
+                "locale": "en",
+                "tag": "nlu-en",
+                "keepStopwords": true,
+                "nonefeatureValue": 1,
+                "nonedeltaMultiplier": 1.2,
+                "spellCheck": false,
+                "spellCheckDistance": 1,
+                "filterZeros": true,
+                "log": true
+              },
+              "features": [
+                "suggest",
+                "an",
+                "altern",
+                "rout",
+                "find",
+                "anoth",
+                "way",
+                "to",
+                "reach",
+                "show",
+                "me",
+                "multi",
+                "leg",
+                "train",
+                "is",
+                "there",
+                "give",
+                "connect",
+                "no",
+                "direct",
+                "avail",
+                "what",
+                "are",
+                "my",
+                "option",
+                "how",
+                "els",
+                "can",
+                "i",
+                "travel",
+                "break",
+                "journey",
+                "the",
+                "fare",
+                "much",
+                "will",
+                "it",
+                "cost",
+                "breakdown",
+                "ticket",
+                "price",
+                "for",
+                "this",
+                "total",
+                "of",
+                "waitlist",
+                "status",
+                "check",
+                "queue",
+                "posit",
+                "where",
+                "do",
+                "stand",
+                "in",
+                "am",
+                "confirm",
+                "yet",
+                "hi",
+                "hello",
+                "hey",
+                "good",
+                "morn",
+                "even"
+              ],
+              "intents": [
+                "route.alternate",
+                "route.fare",
+                "status.check",
+                "greeting"
+              ],
+              "perceptrons": [
+                [
+                  2.780055284500122,
+                  2.780055284500122,
+                  2.780055284500122,
+                  4.151442050933838,
+                  1.8948721885681152,
+                  4.919883728027344,
+                  1.8948721885681152,
+                  1.8948721885681152,
+                  1.8948721885681152,
+                  1.4401057958602905,
+                  2.4593422412872314,
+                  1.4401057958602905,
+                  1.4401057958602905,
+                  5.7372636795043945,
+                  0.38603487610816956,
+                  3.023209810256958,
+                  1.0210860967636108,
+                  3.2233400344848633,
+                  1.0696552991867065,
+                  1.0696552991867065,
+                  1.0696552991867065,
+                  -1.570464015007019,
+                  1.0696552991867065,
+                  2.990490436553955,
+                  1.0696552991867065,
+                  1.9732437133789062,
+                  3.0334739685058594,
+                  3.0334739685058594,
+                  1.411927342414856,
+                  3.0334739685058594,
+                  5.179299354553223,
+                  4.2469587326049805,
+                  -2.155454158782959,
+                  -3.0495824813842773,
+                  -0.9519086480140686,
+                  -0.9519086480140686,
+                  -0.9519086480140686,
+                  -2.0008623600006104,
+                  -2.2071850299835205,
+                  -1.553049921989441,
+                  -1.553049921989441,
+                  -1.553049921989441,
+                  -1.553049921989441,
+                  -0.9406290650367737,
+                  -0.9406290650367737,
+                  -1.7963111400604248,
+                  -1.7963111400604248,
+                  -1.4705203771591187,
+                  -1.8429477214813232,
+                  -1.4705203771591187,
+                  -0.2945350408554077,
+                  -0.2945350408554077,
+                  -0.2945350408554077,
+                  -0.2945350408554077,
+                  -1.1994167566299438,
+                  -1.1994167566299438,
+                  -1.1994167566299438,
+                  -1.7206922769546509,
+                  -1.6991381645202637,
+                  -1.6773707866668701,
+                  -1.3697935342788696,
+                  -0.6940996050834656,
+                  -0.644558310508728,
+                  1.7817735678559048
+                ],
+                [
+                  -0.7919324040412903,
+                  -0.7919324040412903,
+                  -0.7919324040412903,
+                  0.9751613140106201,
+                  -0.2284337729215622,
+                  -1.5382665395736694,
+                  -0.2284337729215622,
+                  -0.2284337729215622,
+                  -0.2284337729215622,
+                  -0.45708727836608887,
+                  1.3060892820358276,
+                  -0.45708727836608887,
+                  -0.45708727836608887,
+                  -2.3652608394622803,
+                  0.785550057888031,
+                  -1.2344024181365967,
+                  1.8594541549682617,
+                  -1.7276828289031982,
+                  -0.055032264441251755,
+                  -0.055032264441251755,
+                  -0.055032264441251755,
+                  1.951840877532959,
+                  -0.055032264441251755,
+                  -1.8937416076660156,
+                  -0.055032264441251755,
+                  1.8683605194091797,
+                  -0.4961663484573364,
+                  -0.4961663484573364,
+                  -1.634720802307129,
+                  -0.4961663484573364,
+                  -0.5019695162773132,
+                  1.31777024269104,
+                  4.052947044372559,
+                  6.563269138336182,
+                  2.4056003093719482,
+                  2.4056003093719482,
+                  2.4056003093719482,
+                  4.257870197296143,
+                  3.5874876976013184,
+                  3.0904738903045654,
+                  3.0904738903045654,
+                  3.0904738903045654,
+                  3.0904738903045654,
+                  1.8519490957260132,
+                  1.8519490957260132,
+                  -0.9323377013206482,
+                  -0.9323377013206482,
+                  -0.27130937576293945,
+                  -1.051000952720642,
+                  -0.27130937576293945,
+                  -0.7019674777984619,
+                  -0.7019674777984619,
+                  -0.7019674777984619,
+                  -0.7019674777984619,
+                  -0.27118396759033203,
+                  -0.27118396759033203,
+                  -0.27118396759033203,
+                  -0.9476748704910278,
+                  -0.9387361407279968,
+                  -0.9293586611747742,
+                  -0.9083507657051086,
+                  -0.44209426641464233,
+                  -0.39639365673065186,
+                  0.9461760727589242
+                ],
+                [
+                  -0.21657311916351318,
+                  -0.21657311916351318,
+                  -0.21657311916351318,
+                  -0.8593196868896484,
+                  -0.20920774340629578,
+                  -0.7590845823287964,
+                  -0.20920774340629578,
+                  -0.20920774340629578,
+                  -0.20920774340629578,
+                  -0.16774605214595795,
+                  -0.4189976453781128,
+                  -0.16774605214595795,
+                  -0.16774605214595795,
+                  -1.264888882637024,
+                  1.3706748485565186,
+                  -0.4821662902832031,
+                  -0.20498724281787872,
+                  -0.13234032690525055,
+                  -0.8859333992004395,
+                  -0.8859333992004395,
+                  -0.8859333992004395,
+                  0.9222116470336914,
+                  -0.8859333992004395,
+                  3.760918617248535,
+                  -0.8859333992004395,
+                  -1.1665226221084595,
+                  -1.068704605102539,
+                  -1.068704605102539,
+                  3.7863943576812744,
+                  -1.068704605102539,
+                  -1.975070595741272,
+                  -2.248769760131836,
+                  -0.6838279366493225,
+                  -2.0442802906036377,
+                  -0.06254000216722488,
+                  -0.06254000216722488,
+                  -0.06254000216722488,
+                  -0.30554550886154175,
+                  -0.04274456948041916,
+                  -0.058269500732421875,
+                  -0.058269500732421875,
+                  -0.058269500732421875,
+                  -0.058269500732421875,
+                  -0.20941948890686035,
+                  -0.20941948890686035,
+                  3.867598056793213,
+                  3.867598056793213,
+                  2.828634023666382,
+                  4.404066562652588,
+                  2.828634023666382,
+                  1.5756099224090576,
+                  1.5756099224090576,
+                  1.5756099224090576,
+                  1.5756099224090576,
+                  3.3412582874298096,
+                  3.3412582874298096,
+                  3.3412582874298096,
+                  -0.6406546831130981,
+                  -0.6222689747810364,
+                  -0.6043482422828674,
+                  -0.71886146068573,
+                  -0.3269606828689575,
+                  -0.3218128979206085,
+                  0.4730330667277684
+                ],
+                [
+                  -1.2612669467926025,
+                  -1.2612669467926025,
+                  -1.2612669467926025,
+                  -2.7103800773620605,
+                  -1.1985751390457153,
+                  -1.7013390064239502,
+                  -1.1985751390457153,
+                  -1.1985751390457153,
+                  -1.1985751390457153,
+                  -0.7780398726463318,
+                  -2.3642449378967285,
+                  -0.7780398726463318,
+                  -0.7780398726463318,
+                  -1.8175077438354492,
+                  -1.626913070678711,
+                  -0.4984406530857086,
+                  -1.582566738128662,
+                  -0.744395911693573,
+                  -0.2264280468225479,
+                  -0.2264280468225479,
+                  -0.2264280468225479,
+                  -1.4167158603668213,
+                  -0.2264280468225479,
+                  -3.0324976444244385,
+                  -0.2264280468225479,
+                  -1.8005481958389282,
+                  -0.7725147604942322,
+                  -0.7725147604942322,
+                  -2.4040610790252686,
+                  -0.7725147604942322,
+                  -1.4136008024215698,
+                  -2.0035758018493652,
+                  -1.727394700050354,
+                  -1.7022624015808105,
+                  -1.023951768875122,
+                  -1.023951768875122,
+                  -1.023951768875122,
+                  -1.6107137203216553,
+                  -0.8339852690696716,
+                  -0.9422281980514526,
+                  -0.9422281980514526,
+                  -0.9422281980514526,
+                  -0.9422281980514526,
+                  -0.5820456147193909,
+                  -0.5820456147193909,
+                  -0.2579418122768402,
+                  -0.2579418122768402,
+                  -1.05360746383667,
+                  -1.3334578275680542,
+                  -1.05360746383667,
+                  -0.2695978581905365,
+                  -0.2695978581905365,
+                  -0.2695978581905365,
+                  -0.2695978581905365,
+                  -1.348239779472351,
+                  -1.348239779472351,
+                  -1.348239779472351,
+                  7.293890476226807,
+                  7.381071090698242,
+                  7.290772438049316,
+                  5.2144389152526855,
+                  2.637657880783081,
+                  2.5922622680664062,
+                  6.549940409644551
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    "intentDomains": {},
+    "extraSentences": [
+      [
+        "en",
+        "suggest an alternate route"
+      ],
+      [
+        "en",
+        "find another way to reach"
+      ],
+      [
+        "en",
+        "show me multi leg trains"
+      ],
+      [
+        "en",
+        "is there another route"
+      ],
+      [
+        "en",
+        "give me connecting trains"
+      ],
+      [
+        "en",
+        "no direct train available what are my options"
+      ],
+      [
+        "en",
+        "how else can I travel"
+      ],
+      [
+        "en",
+        "break my journey"
+      ],
+      [
+        "en",
+        "what is the fare"
+      ],
+      [
+        "en",
+        "how much will it cost"
+      ],
+      [
+        "en",
+        "give me fare breakdown"
+      ],
+      [
+        "en",
+        "ticket price for this route"
+      ],
+      [
+        "en",
+        "total cost of the journey"
+      ],
+      [
+        "en",
+        "what is my waitlist status"
+      ],
+      [
+        "en",
+        "check my queue position"
+      ],
+      [
+        "en",
+        "where do I stand in the queue"
+      ],
+      [
+        "en",
+        "am I confirmed yet"
+      ],
+      [
+        "en",
+        "hi"
+      ],
+      [
+        "en",
+        "hello"
+      ],
+      [
+        "en",
+        "hey"
+      ],
+      [
+        "en",
+        "good morning"
+      ],
+      [
+        "en",
+        "good evening"
+      ]
+    ]
+  },
+  "ner": {
+    "settings": {
+      "tag": "ner",
+      "entityPreffix": "%",
+      "entitySuffix": "%"
+    },
+    "rules": {}
+  },
+  "nlgManager": {
+    "settings": {
+      "tag": "nlg-manager"
+    },
+    "responses": {
+      "en": {
+        "greeting": [
+          {
+            "answer": "Hi! I'm the Wait2Seat assistant. Ask me for alternate routes, fare breakdowns, or your waitlist status."
+          }
+        ],
+        "status.check": [
+          {
+            "answer": "Tell me your PNR and I'll check your live queue position."
+          }
+        ]
+      }
+    }
+  },
+  "actionManager": {
+    "settings": {
+      "tag": "action-manager"
+    },
+    "actions": {}
+  },
+  "slotManager": {}
+}

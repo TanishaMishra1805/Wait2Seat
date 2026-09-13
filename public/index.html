@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wait2Seat — Live Berth Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="board-header">
+    <div class="header-left">
+      <span class="dot"></span>
+      <h1>WAIT2SEAT</h1>
+      <span class="subtitle">Smart Berth Alert &amp; Route Assistant</span>
+    </div>
+    <div class="header-right" id="clock">--:--:--</div>
+  </header>
+
+  <main class="layout">
+
+    <!-- Train info + berth trigger -->
+    <section class="panel train-panel">
+      <h2>12345 · Kanpur Superfast Express</h2>
+      <p class="route-line">KANPUR <span class="arrow">→</span> DELHI</p>
+      <div class="berth-action">
+        <label for="seatLabel">Berth freed up:</label>
+        <input id="seatLabel" type="text" placeholder="e.g. B3-45" value="B3-45" />
+        <button id="freeBerthBtn">Simulate berth release</button>
+      </div>
+      <p class="hint">This mimics a confirmed passenger cancelling — it should alert the top of the queue.</p>
+    </section>
+
+    <!-- Live departure-board style queue -->
+    <section class="panel queue-panel">
+      <h2>Live Waitlist Queue</h2>
+      <div class="board-head">
+        <span>RANK</span><span>NAME</span><span>PNR</span><span>STATUS</span><span>ACTION</span>
+      </div>
+      <div id="queueBoard" class="board-body">
+        <p class="empty-msg">Loading queue…</p>
+      </div>
+    </section>
+
+    <!-- Seat claim / countdown -->
+    <section class="panel claim-panel" id="claimPanel" hidden>
+      <h2>Berth Offered</h2>
+      <p id="claimText">—</p>
+      <div class="countdown" id="countdown">200</div>
+      <p class="hint">seconds remaining to claim before it cascades to the next in queue</p>
+      <button id="claimBtn">Claim this seat</button>
+      <p id="claimResult"></p>
+    </section>
+
+    <!-- NLP.js chatbot -->
+    <section class="panel chat-panel">
+      <h2>Route Assistant</h2>
+      <p class="hint">Ask for an alternate multi-leg route if a direct train isn't available.</p>
+      <div class="chat-window" id="chatWindow">
+        <div class="msg bot">Hi! Tell me your boarding and destination stations, or just ask "suggest an alternate route".</div>
+      </div>
+      <div class="chat-inputs">
+        <input id="fromInput" placeholder="From (e.g. Kanpur)" />
+        <input id="toInput" placeholder="To (e.g. Delhi)" />
+      </div>
+      <div class="chat-send-row">
+        <input id="chatInput" placeholder="Type a message…" />
+        <button id="chatSendBtn">Send</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
