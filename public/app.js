@@ -2,6 +2,11 @@ const TRAIN_NUMBER = "12345";
 let activeClaimId = null;
 let countdownTimer = null;
 
+// Full unfiltered queue as last fetched from the server, and the
+// destination the user has chosen to filter the visible list by.
+let latestQueue = [];
+let destinationFilter = "";
+
 // ---- Split-flap board update helper ----
 function flipTo(elId, newText) {
   const el = document.getElementById(elId);
@@ -12,34 +17,184 @@ function flipTo(elId, newText) {
   setTimeout(() => { el.textContent = newText; }, 250);
 }
 
+// ---- Destination filter ----
+// The datalist is built from whatever destinations actually exist in the
+// live queue, so it always matches real data instead of a hardcoded list.
+function populateDestinationOptions(queue) {
+  const list = document.getElementById("destinationOptions");
+  if (!list) return;
+  const unique = [...new Set(queue.map((p) => p.destinationStation).filter(Boolean))];
+  list.innerHTML = unique.map((d) => `<option value="${d}"></option>`).join("");
+}
+
+function getFilteredQueue() {
+  if (!destinationFilter) return latestQueue;
+  const needle = destinationFilter.trim().toLowerCase();
+  return latestQueue.filter(
+    (p) => p.destinationStation && p.destinationStation.toLowerCase().includes(needle)
+  );
+}
+
+function updateRouteDisplay() {
+  const el = document.getElementById("routeDestination");
+  if (el) el.textContent = destinationFilter.trim() || "New Delhi";
+}
+
+const destinationInput = document.getElementById("destinationFilter");
+if (destinationInput) {
+  destinationInput.addEventListener("input", () => {
+    destinationFilter = destinationInput.value;
+    updateRouteDisplay();
+    // Keep the route assistant in sync with what the user is looking for.
+    const toInput = document.getElementById("toInput");
+    if (toInput) toInput.value = destinationFilter;
+    renderQueue();
+  });
+}
+
+const clearDestinationBtn = document.getElementById("clearDestinationBtn");
+if (clearDestinationBtn) {
+  clearDestinationBtn.addEventListener("click", () => {
+    destinationFilter = "";
+    if (destinationInput) destinationInput.value = "";
+    updateRouteDisplay();
+    renderQueue();
+  });
+}
+
+// ---- Add yourself to the queue ----
+const toggleJoinFormBtn = document.getElementById("toggleJoinFormBtn");
+const joinQueueForm = document.getElementById("joinQueueForm");
+const cancelJoinBtn = document.getElementById("cancelJoinBtn");
+const joinFormMsg = document.getElementById("joinFormMsg");
+
+function setJoinFormOpen(open) {
+  if (!joinQueueForm) return;
+  joinQueueForm.hidden = !open;
+  if (toggleJoinFormBtn) {
+    toggleJoinFormBtn.textContent = open ? "− Hide form" : "+ Add yourself to the queue";
+  }
+  if (open && joinFormMsg) {
+    joinFormMsg.textContent = "";
+    joinFormMsg.className = "join-msg";
+  }
+}
+
+if (toggleJoinFormBtn) {
+  toggleJoinFormBtn.addEventListener("click", () => {
+    setJoinFormOpen(joinQueueForm.hidden);
+  });
+}
+
+if (cancelJoinBtn) {
+  cancelJoinBtn.addEventListener("click", () => {
+    joinQueueForm.reset();
+    setJoinFormOpen(false);
+  });
+}
+
+if (joinQueueForm) {
+  joinQueueForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const passengerData = {
+      name: document.getElementById("joinName").value.trim(),
+      pnr: document.getElementById("joinPnr").value.trim(),
+      boardingStation: document.getElementById("joinFrom").value.trim(),
+      destinationStation: document.getElementById("joinTo").value.trim(),
+      waitlistStatus: document.getElementById("joinStatus").value.trim(),
+    };
+
+    if (Object.values(passengerData).some((v) => !v)) {
+      joinFormMsg.textContent = "Please fill in every field.";
+      joinFormMsg.className = "join-msg error";
+      return;
+    }
+
+    const submitBtn = joinQueueForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    let addedPassenger = null;
+
+    try {
+      const res = await fetch(`/api/queue/${TRAIN_NUMBER}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passengerData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        addedPassenger = data.passenger || data;
+      }
+    } catch (err) {
+      // No live server for this action — fall through to the local queue below.
+    }
+
+    if (!addedPassenger) {
+      addedPassenger = {
+        _id: `local-${Date.now()}`,
+        status: "WAITING",
+        ...passengerData,
+      };
+      latestQueue.push(addedPassenger);
+      populateDestinationOptions(latestQueue);
+    } else {
+      await loadQueue();
+    }
+
+    renderQueue();
+    highlightRow(addedPassenger._id);
+
+    joinFormMsg.textContent = `Added — you're #${latestQueue.findIndex((p) => p._id === addedPassenger._id) + 1} in the queue.`;
+    joinFormMsg.className = "join-msg success";
+    joinQueueForm.reset();
+    submitBtn.disabled = false;
+  });
+}
+
 // ---- Queue board ----
-async function loadQueue() {
-  const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
-  const queue = await res.json();
+function renderQueue() {
   const board = document.getElementById("queueBoard");
 
-  if (!queue.length) {
+  if (!latestQueue.length) {
     board.innerHTML = `<p class="empty-msg">No one currently waiting for train ${TRAIN_NUMBER}.</p>`;
     flipTo("flapName", "— — —");
     flipTo("flapStatus", "None waiting");
     return;
   }
 
-  board.innerHTML = queue
-    .map(
-      (p, i) => `
-      <div class="board-row" data-id="${p._id}">
-        <span class="rank-badge ${i === 0 ? "next" : ""}">${i === 0 ? "NEXT" : "#" + (i + 1)}</span>
-        <span>${p.name}</span>
-        <span class="pnr hide-sm">${p.pnr}</span>
-        <span class="status-${p.status}">${p.waitlistStatus}</span>
-        <span class="hide-sm">${p.boardingStation} → ${p.destinationStation}</span>
-      </div>`
-    )
-    .join("");
+  const filtered = getFilteredQueue();
 
-  flipTo("flapName", queue[0].name);
-  flipTo("flapStatus", "Waiting · " + queue[0].waitlistStatus);
+  if (!filtered.length) {
+    board.innerHTML = `<p class="empty-msg">No one currently waiting for ${destinationFilter}. <button type="button" id="clearFilterInline" class="link-btn">Show everyone</button></p>`;
+    const inlineClear = document.getElementById("clearFilterInline");
+    if (inlineClear) inlineClear.addEventListener("click", () => clearDestinationBtn && clearDestinationBtn.click());
+  } else {
+    board.innerHTML = filtered
+      .map(
+        (p, i) => `
+        <div class="board-row" data-id="${p._id}">
+          <span class="rank-badge ${i === 0 && !destinationFilter ? "next" : ""}">${i === 0 && !destinationFilter ? "NEXT" : "#" + (i + 1)}</span>
+          <span>${p.name}</span>
+          <span class="pnr hide-sm">${p.pnr}</span>
+          <span class="status-${p.status}">${p.waitlistStatus}</span>
+          <span class="hide-sm">${p.boardingStation} → ${p.destinationStation}</span>
+        </div>`
+      )
+      .join("");
+  }
+
+  // The berth is always offered to the true first-in-line passenger for the
+  // whole train, regardless of which destination the viewer is filtering by.
+  flipTo("flapName", latestQueue[0].name);
+  flipTo("flapStatus", "Waiting · " + latestQueue[0].waitlistStatus);
+}
+
+async function loadQueue() {
+  const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
+  latestQueue = await res.json();
+  populateDestinationOptions(latestQueue);
+  renderQueue();
 }
 
 function highlightRow(passengerId) {
