@@ -1,8 +1,7 @@
-App · JS
 const TRAIN_NUMBER = "12345";
 let activeClaimId = null;
 let countdownTimer = null;
- 
+
 // ---- Split-flap board update helper ----
 function flipTo(elId, newText) {
   const el = document.getElementById(elId);
@@ -12,20 +11,20 @@ function flipTo(elId, newText) {
   el.classList.add("flipping");
   setTimeout(() => { el.textContent = newText; }, 250);
 }
- 
+
 // ---- Queue board ----
 async function loadQueue() {
   const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
   const queue = await res.json();
   const board = document.getElementById("queueBoard");
- 
+
   if (!queue.length) {
     board.innerHTML = `<p class="empty-msg">No one currently waiting for train ${TRAIN_NUMBER}.</p>`;
     flipTo("flapName", "— — —");
     flipTo("flapStatus", "None waiting");
     return;
   }
- 
+
   board.innerHTML = queue
     .map(
       (p, i) => `
@@ -38,11 +37,11 @@ async function loadQueue() {
       </div>`
     )
     .join("");
- 
+
   flipTo("flapName", queue[0].name);
   flipTo("flapStatus", "Waiting · " + queue[0].waitlistStatus);
 }
- 
+
 function highlightRow(passengerId) {
   const row = document.querySelector(`.board-row[data-id="${passengerId}"]`);
   if (row) {
@@ -51,7 +50,7 @@ function highlightRow(passengerId) {
     row.classList.add("just-notified");
   }
 }
- 
+
 // ---- Simulate a berth freeing up ----
 document.getElementById("freeBerthBtn").addEventListener("click", async () => {
   const seatLabel = document.getElementById("seatLabel").value || "B3-45";
@@ -61,7 +60,7 @@ document.getElementById("freeBerthBtn").addEventListener("click", async () => {
     body: JSON.stringify({ seatLabel }),
   });
   const data = await res.json();
- 
+
   if (data.passenger) {
     flipTo("flapSeat", data.passenger.seatAssigned);
     flipTo("flapStatus", "Offer sent");
@@ -72,7 +71,7 @@ document.getElementById("freeBerthBtn").addEventListener("click", async () => {
     alert(data.message || "No one is waiting.");
   }
 });
- 
+
 // ---- Claim panel + countdown ----
 function showClaimPanel(passenger) {
   activeClaimId = passenger._id;
@@ -82,12 +81,12 @@ function showClaimPanel(passenger) {
     `${passenger.name} (${passenger.waitlistStatus}) — seat ${passenger.seatAssigned}`;
   document.getElementById("claimResult").textContent = "";
   document.getElementById("countdown").classList.remove("danger");
- 
+
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(pollCountdown, 1000);
   pollCountdown();
 }
- 
+
 async function pollCountdown() {
   if (!activeClaimId) return;
   const res = await fetch(`/api/passengers/${activeClaimId}/countdown`);
@@ -95,7 +94,7 @@ async function pollCountdown() {
   const el = document.getElementById("countdown");
   el.textContent = secondsLeft;
   el.classList.toggle("danger", secondsLeft <= 20 && secondsLeft > 0);
- 
+
   if (secondsLeft <= 0) {
     clearInterval(countdownTimer);
     document.getElementById("claimResult").textContent = "Claim window expired — offer passed to next in queue.";
@@ -104,7 +103,7 @@ async function pollCountdown() {
     loadQueue();
   }
 }
- 
+
 document.getElementById("claimBtn").addEventListener("click", async () => {
   if (!activeClaimId) return;
   const res = await fetch(`/api/passengers/${activeClaimId}/claim`, { method: "POST" });
@@ -118,7 +117,7 @@ document.getElementById("claimBtn").addEventListener("click", async () => {
     loadQueue();
   }
 });
- 
+
 // ---- NLP.js chatbot ----
 function appendMessage(text, sender) {
   const win = document.getElementById("chatWindow");
@@ -128,22 +127,22 @@ function appendMessage(text, sender) {
   win.appendChild(div);
   win.scrollTop = win.scrollHeight;
 }
- 
+
 document.getElementById("chatSendBtn").addEventListener("click", sendChat);
 document.getElementById("chatInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendChat();
 });
- 
+
 async function sendChat() {
   const input = document.getElementById("chatInput");
   const message = input.value.trim();
   if (!message) return;
   appendMessage(message, "user");
   input.value = "";
- 
+
   const from = document.getElementById("fromInput").value.trim();
   const to = document.getElementById("toInput").value.trim();
- 
+
   const res = await fetch("/api/chatbot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -152,9 +151,7 @@ async function sendChat() {
   const data = await res.json();
   appendMessage(data.reply, "bot");
 }
- 
+
 // ---- init ----
 loadQueue();
 setInterval(loadQueue, 5000);
- 
-
