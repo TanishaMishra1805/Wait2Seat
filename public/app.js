@@ -1,4 +1,6 @@
-const TRAIN_NUMBER = "12345";
+// The train being tracked — set by the user via the trip-setup fields in the
+// hero, not hardcoded. Nothing loads until they enter a train number.
+let TRAIN_NUMBER = "";
 let activeClaimId = null;
 let countdownTimer = null;
 
@@ -15,6 +17,53 @@ function flipTo(elId, newText) {
   void el.offsetWidth; // restart animation
   el.classList.add("flipping");
   setTimeout(() => { el.textContent = newText; }, 250);
+}
+
+// ---- Trip setup (train number, name, route) — all user-entered ----
+const trainNumberInput = document.getElementById("trainNumberInput");
+const trainNameInput = document.getElementById("trainNameInput");
+const fromStationInput = document.getElementById("fromStationInput");
+const toStationInput = document.getElementById("toStationInput");
+const stubCode = document.getElementById("stubCode");
+const trackTrainBtn = document.getElementById("trackTrainBtn");
+const trackMsg = document.getElementById("trackMsg");
+let lastLoadFailed = false;
+
+function updateStubCode() {
+  if (stubCode) stubCode.textContent = `WL · ${TRAIN_NUMBER || "— —"}`;
+}
+
+if (trackTrainBtn) {
+  trackTrainBtn.addEventListener("click", async () => {
+    const number = trainNumberInput ? trainNumberInput.value.trim() : "";
+    if (!number) {
+      trackMsg.textContent = "Enter a train number first.";
+      trackMsg.className = "track-msg error";
+      trainNumberInput.focus();
+      return;
+    }
+
+    TRAIN_NUMBER = number;
+    updateStubCode();
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    activeClaimId = null;
+    document.getElementById("claimPanel").hidden = true;
+
+    trackTrainBtn.disabled = true;
+    trackMsg.textContent = "Loading live queue…";
+    trackMsg.className = "track-msg";
+
+    await loadQueue();
+
+    trackTrainBtn.disabled = false;
+    if (lastLoadFailed) {
+      trackMsg.textContent = `Couldn't reach live data for train ${TRAIN_NUMBER}.`;
+      trackMsg.className = "track-msg error";
+    } else {
+      trackMsg.textContent = `Tracking train ${TRAIN_NUMBER}${trainNameInput.value.trim() ? " — " + trainNameInput.value.trim() : ""}.`;
+      trackMsg.className = "track-msg success";
+    }
+  });
 }
 
 // ---- Destination filter ----
@@ -35,16 +84,10 @@ function getFilteredQueue() {
   );
 }
 
-function updateRouteDisplay() {
-  const el = document.getElementById("routeDestination");
-  if (el) el.textContent = destinationFilter.trim() || "New Delhi";
-}
-
 const destinationInput = document.getElementById("destinationFilter");
 if (destinationInput) {
   destinationInput.addEventListener("input", () => {
     destinationFilter = destinationInput.value;
-    updateRouteDisplay();
     // Keep the route assistant in sync with what the user is looking for.
     const toInput = document.getElementById("toInput");
     if (toInput) toInput.value = destinationFilter;
@@ -57,7 +100,6 @@ if (clearDestinationBtn) {
   clearDestinationBtn.addEventListener("click", () => {
     destinationFilter = "";
     if (destinationInput) destinationInput.value = "";
-    updateRouteDisplay();
     renderQueue();
   });
 }
@@ -82,7 +124,13 @@ function setJoinFormOpen(open) {
 
 if (toggleJoinFormBtn) {
   toggleJoinFormBtn.addEventListener("click", () => {
-    setJoinFormOpen(joinQueueForm.hidden);
+    const opening = joinQueueForm.hidden;
+    if (opening) {
+      // Default to the route already entered above — still fully editable.
+      document.getElementById("joinFrom").value = fromStationInput ? fromStationInput.value : "";
+      document.getElementById("joinTo").value = toStationInput ? toStationInput.value : "";
+    }
+    setJoinFormOpen(opening);
   });
 }
 
@@ -104,6 +152,12 @@ if (joinQueueForm) {
       destinationStation: document.getElementById("joinTo").value.trim(),
       waitlistStatus: document.getElementById("joinStatus").value.trim(),
     };
+
+    if (!TRAIN_NUMBER) {
+      joinFormMsg.textContent = "Enter a train number above first.";
+      joinFormMsg.className = "join-msg error";
+      return;
+    }
 
     if (Object.values(passengerData).some((v) => !v)) {
       joinFormMsg.textContent = "Please fill in every field.";
@@ -156,6 +210,20 @@ if (joinQueueForm) {
 function renderQueue() {
   const board = document.getElementById("queueBoard");
 
+  if (!TRAIN_NUMBER) {
+    board.innerHTML = `<p class="empty-msg">Enter a train number above and press "Track this train" to load its live queue.</p>`;
+    flipTo("flapName", "— — —");
+    flipTo("flapStatus", "Enter a train number");
+    return;
+  }
+
+  if (lastLoadFailed) {
+    board.innerHTML = `<p class="empty-msg">Couldn't reach live data for train ${TRAIN_NUMBER}. Check the number and press "Track this train" again.</p>`;
+    flipTo("flapName", "— — —");
+    flipTo("flapStatus", "Couldn't load");
+    return;
+  }
+
   if (!latestQueue.length) {
     board.innerHTML = `<p class="empty-msg">No one currently waiting for train ${TRAIN_NUMBER}.</p>`;
     flipTo("flapName", "— — —");
@@ -191,8 +259,21 @@ function renderQueue() {
 }
 
 async function loadQueue() {
-  const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
-  latestQueue = await res.json();
+  if (!TRAIN_NUMBER) {
+    latestQueue = [];
+    lastLoadFailed = false;
+    renderQueue();
+    return;
+  }
+  try {
+    const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    latestQueue = await res.json();
+    lastLoadFailed = false;
+  } catch (err) {
+    latestQueue = [];
+    lastLoadFailed = true;
+  }
   populateDestinationOptions(latestQueue);
   renderQueue();
 }
@@ -208,6 +289,10 @@ function highlightRow(passengerId) {
 
 // ---- Simulate a berth freeing up ----
 document.getElementById("freeBerthBtn").addEventListener("click", async () => {
+  if (!TRAIN_NUMBER) {
+    alert("Enter a train number above first.");
+    return;
+  }
   const seatLabel = document.getElementById("seatLabel").value || "B3-45";
   const res = await fetch(`/api/trains/${TRAIN_NUMBER}/berth-freed`, {
     method: "POST",
