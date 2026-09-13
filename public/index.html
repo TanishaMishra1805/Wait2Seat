@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Wait2Seat — 12345 Kanpur Superfast Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,51 +13,64 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="5" y="6" width="22" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
-          <path d="M9 22L6 27M23 22L26 27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="11" cy="17" r="1.6" fill="currentColor"/>
-          <circle cx="21" cy="17" r="1.6" fill="currentColor"/>
-          <path d="M9 11h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
         <span class="brand-word">Wait2Seat</span>
       </div>
       <div class="topbar-live">
         <span class="pulse-dot"></span>
-        Board refreshes every 5s
+        Refreshes every 5s
       </div>
     </div>
+    <div class="window-strip" aria-hidden="true"></div>
   </header>
 
-  <!-- HERO: split-flap departure board -->
-  <section class="board-hero">
-    <div class="board-hero-inner">
+  <!-- HERO: boarding-pass style status pass -->
+  <section class="pass-wrap">
+    <div class="pass">
 
-      <div class="train-id">
-        <span class="train-number mono">12345</span>
-        <div class="train-name">
-          <h1>Kanpur Superfast Express</h1>
-          <p class="route-line">
-            <span>KANPUR CENTRAL</span>
-            <span class="route-rail" aria-hidden="true"><span class="route-rail-fill"></span><span class="route-rail-dot"></span></span>
-            <span>NEW DELHI</span>
-          </p>
+      <div class="pass-main">
+        <div class="pass-top">
+          <span class="pass-tag">Live berth clearance pass</span>
+          <span class="pass-number mono">12345</span>
+        </div>
+
+        <h1>Kanpur Superfast Express</h1>
+
+        <div class="pass-route">
+          <span class="pass-station">Kanpur Central</span>
+          <span class="pass-track" aria-hidden="true">
+            <span class="pass-track-line"></span>
+            <span class="pass-track-dot"></span>
+          </span>
+          <span class="pass-station" id="routeDestination">New Delhi</span>
+        </div>
+
+        <div class="destination-filter">
+          <label for="destinationFilter">Going to</label>
+          <input id="destinationFilter" list="destinationOptions" class="mono" placeholder="Type a destination…" autocomplete="off" />
+          <datalist id="destinationOptions"></datalist>
+          <button type="button" id="clearDestinationBtn" class="ghost-btn">All stations</button>
+        </div>
+
+        <div class="pass-fields">
+          <div class="pass-field">
+            <span class="pass-field-label">Next up</span>
+            <span class="pass-field-value" id="flapName">— — —</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-field-label">Berth</span>
+            <span class="pass-field-value mono" id="flapSeat">— —</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-field-label">Status</span>
+            <span class="pass-field-value" id="flapStatus">Waiting</span>
+          </div>
         </div>
       </div>
 
-      <div class="flap-board" id="flapBoard" aria-live="polite">
-        <div class="flap-row">
-          <span class="flap-label">Next up</span>
-          <span class="flap-value" id="flapName">— — —</span>
-        </div>
-        <div class="flap-row">
-          <span class="flap-label">Berth</span>
-          <span class="flap-value mono" id="flapSeat">— —</span>
-        </div>
-        <div class="flap-row">
-          <span class="flap-label">Status</span>
-          <span class="flap-value" id="flapStatus">Waiting</span>
-        </div>
+      <div class="pass-stub">
+        <span class="pass-stub-tag">LIVE</span>
+        <div class="pass-barcode" aria-hidden="true"></div>
+        <span class="pass-stub-code mono">WL·12345</span>
       </div>
 
     </div>
@@ -71,7 +84,7 @@
       <section class="panel queue-panel">
         <div class="panel-head">
           <div>
-            <p class="chart-tag">Passenger reservation chart</p>
+            <p class="eyebrow">Passenger reservation chart</p>
             <h2>Waitlist queue</h2>
           </div>
           <div class="berth-action">
@@ -81,6 +94,38 @@
           </div>
         </div>
         <p class="panel-sub">Served strictly in order — WL1 is offered the seat before WL2, WL3 and everyone below.</p>
+
+        <div class="join-row">
+          <button type="button" id="toggleJoinFormBtn" class="ghost-btn">+ Add yourself to the queue</button>
+        </div>
+
+        <form id="joinQueueForm" class="join-form" hidden>
+          <div class="join-field">
+            <label for="joinName">Name</label>
+            <input id="joinName" name="name" required placeholder="Full name" />
+          </div>
+          <div class="join-field">
+            <label for="joinPnr">PNR number</label>
+            <input id="joinPnr" name="pnr" class="mono" required inputmode="numeric" maxlength="10" placeholder="4507839216" />
+          </div>
+          <div class="join-field">
+            <label for="joinFrom">Boarding station</label>
+            <input id="joinFrom" name="boardingStation" list="destinationOptions" required placeholder="Kanpur Central" />
+          </div>
+          <div class="join-field">
+            <label for="joinTo">Destination station</label>
+            <input id="joinTo" name="destinationStation" list="destinationOptions" required placeholder="New Delhi" />
+          </div>
+          <div class="join-field">
+            <label for="joinStatus">Waitlist status</label>
+            <input id="joinStatus" name="waitlistStatus" class="mono" required placeholder="WL5" />
+          </div>
+          <div class="join-actions">
+            <button type="submit">Join waitlist</button>
+            <button type="button" id="cancelJoinBtn" class="ghost-btn">Cancel</button>
+          </div>
+          <p id="joinFormMsg" class="join-msg"></p>
+        </form>
 
         <div class="board-head">
           <span>Rank</span><span>Passenger</span><span class="hide-sm">PNR</span><span>Class</span><span class="hide-sm">Journey</span>
@@ -92,15 +137,13 @@
 
       <!-- Claim panel: only shown when a berth has been offered -->
       <section class="panel claim-panel" id="claimPanel" hidden>
-        <div class="ticket">
-          <div class="ticket-notch ticket-notch-left"></div>
-          <div class="ticket-notch ticket-notch-right"></div>
+        <div class="claim-card">
           <p class="claim-label">Berth offered to</p>
           <p class="claim-name" id="claimText">—</p>
-          <div class="countdown-ring">
-            <div class="countdown mono" id="countdown">200</div>
+          <div class="countdown-disc">
+            <span class="countdown mono" id="countdown">200</span>
           </div>
-          <p class="panel-sub">seconds left to claim — after that it passes to the next passenger</p>
+          <p class="claim-sub">seconds left to claim — after that it passes to the next passenger</p>
           <button id="claimBtn">Claim this seat</button>
           <p id="claimResult" class="claim-result"></p>
         </div>
@@ -108,15 +151,13 @@
 
     </div>
 
-    <!-- RIGHT: secondary column — route assistant -->
+    <!-- RIGHT: secondary column — enquiry counter -->
     <aside class="col-side">
       <section class="panel chat-panel">
         <div class="chat-head">
-          <svg class="chat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4H9l-4 3v-3H8a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
+          <span class="counter-badge mono">04</span>
           <div>
-            <h2>Route assistant</h2>
+            <h2>Enquiry counter</h2>
             <p class="panel-sub">Ask for an alternate route if a direct train isn't available.</p>
           </div>
         </div>
