@@ -76,6 +76,44 @@ function findTrainsTo(needle) {
   );
 }
 
+// Shared by the search panel and the route-assistant chatbot: looks up a
+// destination in the directory, falling back to the nearest major junction.
+//
+// This first tries a real backend endpoint (/api/trains/search) so that if
+// you later wire up a licensed provider server-side (IRCTC only offers
+// authorized B2B/agent access, never a public client-side API — see
+// https://www.irctc.co.in/nget/train-search for what a legitimate partner
+// integration looks like), the app switches to live data automatically
+// with zero frontend changes. Until then, it falls back to the local
+// illustrative directory below.
+async function searchDirectoryForDestination(raw) {
+  if (!raw) return { matches: [], note: "" };
+
+  try {
+    const res = await fetch(`/api/trains/search?to=${encodeURIComponent(raw)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        return { matches: data, note: "" };
+      }
+    }
+  } catch (err) {
+    // No live train-search backend configured — fall back to the local directory.
+  }
+
+  let matches = findTrainsTo(raw);
+  let note = "";
+  if (!matches.length) {
+    const key = raw.toLowerCase().replace(/\s+/g, "");
+    const majorStation = NEARBY_MAJOR_STATION[key];
+    if (majorStation) {
+      matches = findTrainsTo(majorStation);
+      note = `No direct trains found to "${raw}" — showing trains to ${majorStation}, the nearest major junction in our directory.`;
+    }
+  }
+  return { matches, note };
+}
+
 async function attachLiveWaitlist(number, cellId) {
   const cell = document.getElementById(cellId);
   if (!cell) return;
@@ -89,6 +127,33 @@ async function attachLiveWaitlist(number, cellId) {
   }
 }
 
+function buildTrainCardHtml(t, cellId) {
+  return `
+    <div class="train-result" data-number="${t.number}">
+      <div class="train-result-info">
+        <span class="train-result-title">${t.number} · ${t.name}</span>
+        <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}</span>
+        <span class="train-result-wl mono" id="${cellId}">Checking live waitlist…</span>
+      </div>
+      <button type="button" class="track-result-btn" data-train-number="${t.number}">Track this train</button>
+    </div>`;
+}
+
+// Delegated so it works for cards rendered in either the search panel or the chat window.
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".track-result-btn");
+  if (!btn) return;
+  const t = TRAIN_DIRECTORY.find((x) => x.number === btn.dataset.trainNumber);
+  if (!t) return;
+  trainNumberInput.value = t.number;
+  trainNameInput.value = t.name;
+  fromStationInput.value = t.from;
+  toStationInput.value = t.to;
+  if (departureInput) departureInput.value = t.departure;
+  trackTrainBtn.click();
+  document.querySelector(".queue-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
 function renderTrainResults(matches, needle, note) {
   if (!matches.length) {
     searchResults.innerHTML = `<p class="search-empty">No trains found for "${needle}" in our directory — try a nearby major station, or enter a train number above if you already know it. This is a demo directory, not a live national database.</p>`;
@@ -96,57 +161,19 @@ function renderTrainResults(matches, needle, note) {
   }
   const noteHtml = note ? `<p class="search-note">${note}</p>` : "";
   searchResults.innerHTML =
-    noteHtml +
-    matches
-      .map(
-        (t, i) => `
-      <div class="train-result" data-number="${t.number}">
-        <div class="train-result-info">
-          <span class="train-result-title">${t.number} · ${t.name}</span>
-          <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}</span>
-          <span class="train-result-wl mono" id="wl-${i}-${t.number}">Checking live waitlist…</span>
-        </div>
-        <button type="button" class="track-result-btn">Track this train</button>
-      </div>`
-      )
-      .join("");
-
+    noteHtml + matches.map((t, i) => buildTrainCardHtml(t, `wl-${i}-${t.number}`)).join("");
   matches.forEach((t, i) => attachLiveWaitlist(t.number, `wl-${i}-${t.number}`));
-
-  searchResults.querySelectorAll(".track-result-btn").forEach((btn, i) => {
-    btn.addEventListener("click", () => {
-      const t = matches[i];
-      trainNumberInput.value = t.number;
-      trainNameInput.value = t.name;
-      fromStationInput.value = t.from;
-      toStationInput.value = t.to;
-      if (departureInput) departureInput.value = t.departure;
-      trackTrainBtn.click();
-      document.querySelector(".queue-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
 }
 
 if (searchTrainsBtn) {
-  searchTrainsBtn.addEventListener("click", () => {
+  searchTrainsBtn.addEventListener("click", async () => {
     const raw = searchDestinationInput.value.trim();
     if (!raw) {
       searchResults.innerHTML = `<p class="search-empty">Type a destination station to search.</p>`;
       return;
     }
-
-    let matches = findTrainsTo(raw);
-    let note = "";
-
-    if (!matches.length) {
-      const key = raw.toLowerCase().replace(/\s+/g, "");
-      const majorStation = NEARBY_MAJOR_STATION[key];
-      if (majorStation) {
-        matches = findTrainsTo(majorStation);
-        note = `No direct trains found to "${raw}" — showing trains to ${majorStation}, the nearest major junction in our directory.`;
-      }
-    }
-
+    searchResults.innerHTML = `<p class="search-empty">Searching…</p>`;
+    const { matches, note } = await searchDirectoryForDestination(raw);
     renderTrainResults(matches, raw, note);
   });
   searchDestinationInput.addEventListener("keydown", (e) => {
@@ -541,6 +568,25 @@ function appendMessage(text, sender) {
   win.scrollTop = win.scrollHeight;
 }
 
+function appendTrainResultsToChat(matches, note, destination) {
+  const win = document.getElementById("chatWindow");
+  const wrap = document.createElement("div");
+  wrap.className = "msg bot chat-trains";
+
+  if (!matches.length) {
+    wrap.innerHTML = `<p>No trains found to "${destination}" in our directory yet — try a nearby major station.</p>`;
+    win.appendChild(wrap);
+    win.scrollTop = win.scrollHeight;
+    return;
+  }
+
+  const noteHtml = note ? `<p class="search-note">${note}</p>` : `<p>Found ${matches.length} train${matches.length > 1 ? "s" : ""} to ${destination}:</p>`;
+  wrap.innerHTML = noteHtml + matches.map((t, i) => buildTrainCardHtml(t, `chatwl-${i}-${t.number}`)).join("");
+  win.appendChild(wrap);
+  matches.forEach((t, i) => attachLiveWaitlist(t.number, `chatwl-${i}-${t.number}`));
+  win.scrollTop = win.scrollHeight;
+}
+
 document.getElementById("chatSendBtn").addEventListener("click", sendChat);
 document.getElementById("chatInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendChat();
@@ -556,13 +602,39 @@ async function sendChat() {
   const from = document.getElementById("fromInput").value.trim();
   const to = document.getElementById("toInput").value.trim();
 
-  const res = await fetch("/api/chatbot", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, from, to }),
-  });
-  const data = await res.json();
-  appendMessage(data.reply, "bot");
+  let botReply = null;
+  try {
+    const res = await fetch("/api/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, from, to }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      botReply = data.reply;
+    }
+  } catch (err) {
+    // No live chatbot backend reachable — fall back to the local directory below.
+  }
+
+  if (botReply) appendMessage(botReply, "bot");
+
+  const asksForRoute = /route|train|suggest|alternate|reach|go(?:ing)? to/i.test(message);
+
+  let destination = to;
+  if (!destination) {
+    const m = message.match(/(?:to|for|reach)\s+([a-zA-Z\s]{3,})$/i);
+    if (m) destination = m[1].trim().replace(/[?.!]+$/, "");
+  }
+
+  if (destination) {
+    // A destination is set — always back the reply with real results
+    // (live backend if one's configured, directory otherwise).
+    const { matches, note } = await searchDirectoryForDestination(destination);
+    appendTrainResultsToChat(matches, note, destination);
+  } else if (asksForRoute || !botReply) {
+    appendMessage('Tell me a destination — e.g. "trains to Bhopal", or fill in the "To" field above — and I\'ll list trains that actually go there.', "bot");
+  }
 }
 
 // ---- init ----
