@@ -19,11 +19,84 @@ function flipTo(elId, newText) {
   setTimeout(() => { el.textContent = newText; }, 250);
 }
 
+// ---- Find trains to a destination ----
+// A small built-in directory (illustrative — not live data) so someone who
+// doesn't know their train number can still find one that runs where they're going.
+const TRAIN_DIRECTORY = [
+  { number: "12417", name: "Prayagraj Express", from: "Kanpur Central", to: "New Delhi", departure: "22:35", via: ["Kanpur Central", "Etawah", "Tundla", "Aligarh", "New Delhi"] },
+  { number: "12559", name: "Shiv Ganga Express", from: "Kanpur Central", to: "New Delhi", departure: "04:50", via: ["Kanpur Central", "Kanpur Anwarganj", "Tundla", "New Delhi"] },
+  { number: "12303", name: "Poorva Express", from: "Kanpur Central", to: "Howrah Junction", departure: "03:10", via: ["Kanpur Central", "Prayagraj", "Varanasi", "Patna", "Howrah Junction"] },
+  { number: "13005", name: "Amritsar Mail", from: "Kanpur Central", to: "Kolkata", departure: "01:20", via: ["Kanpur Central", "Lucknow", "Patna", "Kolkata"] },
+  { number: "11016", name: "Kushinagar Express", from: "Kanpur Central", to: "Mumbai CST", departure: "14:05", via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Mumbai CST"] },
+  { number: "12141", name: "Patna–LTT Express", from: "Kanpur Central", to: "Mumbai LTT", departure: "09:40", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Mumbai LTT"] },
+  { number: "12724", name: "Telangana Express", from: "Kanpur Central", to: "Hyderabad", departure: "02:30", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Hyderabad"] },
+  { number: "12622", name: "Tamil Nadu Express", from: "Kanpur Central", to: "Chennai Central", departure: "05:15", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Chennai Central"] },
+  { number: "12489", name: "Seemanchal Express", from: "Kanpur Central", to: "Patna", departure: "11:45", via: ["Kanpur Central", "Lucknow", "Varanasi", "Patna"] },
+  { number: "12403", name: "Bhopal–Kanpur Express", from: "Kanpur Central", to: "Bhopal", departure: "06:20", via: ["Kanpur Central", "Jhansi", "Bhopal"] },
+  { number: "12034", name: "Kanpur Shatabdi", from: "Kanpur Central", to: "New Delhi", departure: "19:20", via: ["Kanpur Central", "Tundla", "New Delhi"] },
+  { number: "14853", name: "Marudhar Express", from: "Kanpur Central", to: "Jaipur", departure: "17:10", via: ["Kanpur Central", "Agra", "Jaipur"] },
+];
+
+const searchDestinationInput = document.getElementById("searchDestination");
+const searchTrainsBtn = document.getElementById("searchTrainsBtn");
+const searchResults = document.getElementById("searchResults");
+
+function renderTrainResults(matches, needle) {
+  if (!matches.length) {
+    searchResults.innerHTML = `<p class="search-empty">No trains found for "${needle}" in our directory — try a nearby major station, or enter a train number above if you already know it.</p>`;
+    return;
+  }
+  searchResults.innerHTML = matches
+    .map(
+      (t) => `
+      <div class="train-result" data-number="${t.number}">
+        <div class="train-result-info">
+          <span class="train-result-title">${t.number} · ${t.name}</span>
+          <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}</span>
+        </div>
+        <button type="button" class="track-result-btn">Track this train</button>
+      </div>`
+    )
+    .join("");
+
+  searchResults.querySelectorAll(".track-result-btn").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      const t = matches[i];
+      trainNumberInput.value = t.number;
+      trainNameInput.value = t.name;
+      fromStationInput.value = t.from;
+      toStationInput.value = t.to;
+      if (departureInput) departureInput.value = t.departure;
+      trackTrainBtn.click();
+      document.querySelector(".queue-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+if (searchTrainsBtn) {
+  searchTrainsBtn.addEventListener("click", () => {
+    const needle = searchDestinationInput.value.trim().toLowerCase();
+    if (!needle) {
+      searchResults.innerHTML = `<p class="search-empty">Type a destination station to search.</p>`;
+      return;
+    }
+    const matches = TRAIN_DIRECTORY.filter(
+      (t) => t.to.toLowerCase().includes(needle) || t.via.some((v) => v.toLowerCase().includes(needle))
+    );
+    renderTrainResults(matches, searchDestinationInput.value.trim());
+  });
+  searchDestinationInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchTrainsBtn.click();
+  });
+}
+
 // ---- Trip setup (train number, name, route) — all user-entered ----
 const trainNumberInput = document.getElementById("trainNumberInput");
 const trainNameInput = document.getElementById("trainNameInput");
 const fromStationInput = document.getElementById("fromStationInput");
 const toStationInput = document.getElementById("toStationInput");
+const departureInput = document.getElementById("departureInput");
+const arrivalInput = document.getElementById("arrivalInput");
 const stubCode = document.getElementById("stubCode");
 const trackTrainBtn = document.getElementById("trackTrainBtn");
 const trackMsg = document.getElementById("trackMsg");
@@ -45,6 +118,25 @@ if (trackTrainBtn) {
 
     TRAIN_NUMBER = number;
     updateStubCode();
+
+    const passNumber = document.getElementById("passNumber");
+    const passTitle = document.getElementById("passTitle");
+    const passFrom = document.getElementById("passFrom");
+    const passTo = document.getElementById("passTo");
+    if (passNumber) passNumber.textContent = TRAIN_NUMBER;
+    if (passTitle) passTitle.textContent = trainNameInput.value.trim() || "Your train";
+    if (passFrom) passFrom.textContent = fromStationInput.value.trim() || "—";
+    if (passTo) passTo.textContent = toStationInput.value.trim() || "—";
+
+    const passTiming = document.getElementById("passTiming");
+    if (passTiming) {
+      const dep = departureInput.value || "--:--";
+      const arr = arrivalInput.value || "--:--";
+      passTiming.textContent = (departureInput.value || arrivalInput.value)
+        ? `Departs ${dep} · Arrives ${arr}`
+        : "Timing not set";
+    }
+
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     activeClaimId = null;
     document.getElementById("claimPanel").hidden = true;
@@ -207,8 +299,25 @@ if (joinQueueForm) {
 }
 
 // ---- Queue board ----
+function updateQueueStats() {
+  const counts = { WAITING: 0, NOTIFIED: 0, CONFIRMED: 0, EXPIRED: 0 };
+  latestQueue.forEach((p) => {
+    if (counts[p.status] !== undefined) counts[p.status] += 1;
+  });
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  set("statTotal", latestQueue.length);
+  set("statWaiting", counts.WAITING);
+  set("statNotified", counts.NOTIFIED);
+  set("statConfirmed", counts.CONFIRMED);
+  set("statExpired", counts.EXPIRED);
+}
+
 function renderQueue() {
   const board = document.getElementById("queueBoard");
+  updateQueueStats();
 
   if (!TRAIN_NUMBER) {
     board.innerHTML = `<p class="empty-msg">Enter a train number above and press "Track this train" to load its live queue.</p>`;
