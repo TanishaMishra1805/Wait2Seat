@@ -208,15 +208,36 @@
     <aside class="col-side">
       <section class="panel chat-panel">
         <div class="chat-head">
-          <span class="counter-badge mono">04</span>
+          <span class="bot-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 8V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <circle cx="12" cy="4" r="1.3" fill="currentColor"/>
+              <circle cx="9" cy="14" r="1.3" fill="currentColor"/>
+              <circle cx="15" cy="14" r="1.3" fill="currentColor"/>
+              <path d="M9 17.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </span>
           <div>
-            <h2>Enquiry counter</h2>
-            <p class="panel-sub">Ask for an alternate route if a direct train isn't available.</p>
+            <h2>AI Travel Assistant</h2>
+            <p class="panel-sub">Ask me anything about your tracked train — berth, queue, timing, or where to go.</p>
           </div>
         </div>
 
         <div class="chat-window" id="chatWindow">
-          <div class="msg bot">Type your destination in the "To" field below (or just ask, e.g. "trains to Bhopal") and I'll list trains that actually go there, with live waitlist counts.</div>
+          <div class="msg-row bot">
+            <span class="msg-avatar bot-avatar-sm" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M12 8V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="12" cy="4" r="1.3" fill="currentColor"/>
+                <circle cx="9" cy="14" r="1.3" fill="currentColor"/>
+                <circle cx="15" cy="14" r="1.3" fill="currentColor"/>
+                <path d="M9 17.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div class="msg bot">Hi! Ask me things like "what's my berth", "how many are waiting", "who's next", "when does it depart", "trains to Bhopal", or "PNR 4507839216".</div>
+          </div>
         </div>
 
         <div class="chat-inputs">
