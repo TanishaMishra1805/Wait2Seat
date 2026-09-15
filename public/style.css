@@ -672,6 +672,29 @@ button:focus-visible { outline: 2px solid var(--coach-red-deep); outline-offset:
 .msg.bot { background: var(--paper); border: 1px solid var(--line); align-self: flex-start; color: var(--ink); }
 .msg.user { background: var(--coach-red); color: var(--cream); align-self: flex-end; font-weight: 600; }
 
+.msg.chat-trains {
+  max-width: 100%;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.msg.chat-trains > p:first-child {
+  margin: 0 0 2px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.msg.chat-trains .train-result {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.msg.chat-trains .train-result button { width: 100%; }
+
 .chat-inputs, .chat-send-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .chat-inputs input, .chat-send-row input { flex: 1; min-width: 0; }
 
