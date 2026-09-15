@@ -6,7 +6,7 @@
 <title>Wait2Seat — 12345 Kanpur Superfast Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3" />
+<link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
 
@@ -23,33 +23,60 @@
     <div class="window-strip" aria-hidden="true"></div>
   </header>
 
-  <!-- HERO: boarding-pass style status pass -->
+  <!-- Trip setup: compact functional bar, separate from the visual pass below -->
+  <section class="setup-bar">
+    <div class="setup-bar-inner">
+      <div class="setup-field">
+        <label for="trainNumberInput">Train no.</label>
+        <input id="trainNumberInput" class="mono" placeholder="12345" inputmode="numeric" maxlength="6" />
+      </div>
+      <div class="setup-field grow">
+        <label for="trainNameInput">Train name</label>
+        <input id="trainNameInput" placeholder="e.g. Kanpur Superfast Express" />
+      </div>
+      <div class="setup-field">
+        <label for="fromStationInput">From</label>
+        <input id="fromStationInput" placeholder="Boarding station" />
+      </div>
+      <div class="setup-field">
+        <label for="toStationInput">To</label>
+        <input id="toStationInput" placeholder="Destination station" />
+      </div>
+      <div class="setup-field">
+        <label for="departureInput">Departs</label>
+        <input id="departureInput" type="time" />
+      </div>
+      <div class="setup-field">
+        <label for="arrivalInput">Arrives</label>
+        <input id="arrivalInput" type="time" />
+      </div>
+      <button type="button" id="trackTrainBtn">Track this train</button>
+    </div>
+    <p id="trackMsg" class="track-msg"></p>
+  </section>
+
+  <!-- HERO: boarding-pass style status pass — pure display, updates once tracked -->
   <section class="pass-wrap">
     <div class="pass">
 
       <div class="pass-main">
         <div class="pass-top">
           <span class="pass-tag">Live berth clearance pass</span>
-          <input id="trainNumberInput" class="pass-number-input mono" placeholder="Train no." inputmode="numeric" maxlength="6" />
+          <span class="pass-number mono" id="passNumber">— —</span>
         </div>
 
-        <input id="trainNameInput" class="pass-title-input" placeholder="Enter train name" />
+        <h1 id="passTitle">Your train</h1>
 
         <div class="pass-route">
-          <input id="fromStationInput" class="pass-station-input" placeholder="Boarding station" />
+          <span class="pass-station" id="passFrom">—</span>
           <span class="pass-track" aria-hidden="true">
             <span class="pass-track-line"></span>
             <span class="pass-track-dot"></span>
           </span>
-          <input id="toStationInput" class="pass-station-input" placeholder="Destination station" />
+          <span class="pass-station" id="passTo">—</span>
         </div>
 
-        <div class="destination-filter">
-          <label for="destinationFilter">Filter queue by destination</label>
-          <input id="destinationFilter" list="destinationOptions" class="mono" placeholder="Any destination" autocomplete="off" />
-          <datalist id="destinationOptions"></datalist>
-          <button type="button" id="clearDestinationBtn" class="ghost-btn">All stations</button>
-        </div>
+        <p class="pass-timing" id="passTiming">Timing not set</p>
 
         <div class="pass-fields">
           <div class="pass-field">
@@ -81,6 +108,17 @@
     <!-- LEFT: primary column — queue + claim -->
     <div class="col-main">
 
+      <section class="panel search-panel">
+        <p class="eyebrow">Not sure which train?</p>
+        <h2>Find trains to your destination</h2>
+        <p class="panel-sub">Tell us where you're headed and we'll suggest trains that run there.</p>
+        <div class="search-row">
+          <input id="searchDestination" placeholder="e.g. New Delhi, Mumbai, Kolkata…" autocomplete="off" />
+          <button type="button" id="searchTrainsBtn">Find trains</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+      </section>
+
       <section class="panel queue-panel">
         <div class="panel-head">
           <div>
@@ -94,6 +132,21 @@
           </div>
         </div>
         <p class="panel-sub">Served strictly in order — WL1 is offered the seat before WL2, WL3 and everyone below.</p>
+
+        <div class="queue-stats" id="queueStats">
+          <span class="stat-chip"><strong id="statTotal">0</strong> total</span>
+          <span class="stat-chip waiting"><strong id="statWaiting">0</strong> waiting</span>
+          <span class="stat-chip notified"><strong id="statNotified">0</strong> notified</span>
+          <span class="stat-chip confirmed"><strong id="statConfirmed">0</strong> confirmed</span>
+          <span class="stat-chip expired"><strong id="statExpired">0</strong> expired</span>
+        </div>
+
+        <div class="queue-filter">
+          <label for="destinationFilter">Filter by destination</label>
+          <input id="destinationFilter" list="destinationOptions" class="mono" placeholder="Any destination" autocomplete="off" />
+          <datalist id="destinationOptions"></datalist>
+          <button type="button" id="clearDestinationBtn" class="ghost-btn">All stations</button>
+        </div>
 
         <div class="join-row">
           <button type="button" id="toggleJoinFormBtn" class="ghost-btn">+ Add yourself to the queue</button>
@@ -174,6 +227,28 @@
           <input id="chatInput" placeholder="Type a message…" />
           <button id="chatSendBtn">Send</button>
         </div>
+      </section>
+
+      <section class="panel legend-panel">
+        <h2>Waitlist status guide</h2>
+        <dl class="status-legend">
+          <div>
+            <dt>GNWL</dt>
+            <dd>General waitlist — the most common type, clears first as confirmed passengers cancel.</dd>
+          </div>
+          <div>
+            <dt>RAC</dt>
+            <dd>Reservation Against Cancellation — you already share a berth and move to a full one as seats free up.</dd>
+          </div>
+          <div>
+            <dt>PQWL</dt>
+            <dd>Pooled Quota waitlist — reserved for a specific stretch of the journey between two stations.</dd>
+          </div>
+          <div>
+            <dt>TQWL</dt>
+            <dd>Tatkal waitlist — from last-minute Tatkal quota bookings, usually clears slower than GNWL.</dd>
+          </div>
+        </dl>
       </section>
     </aside>
 
