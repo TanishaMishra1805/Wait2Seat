@@ -20,44 +20,98 @@ function flipTo(elId, newText) {
 }
 
 // ---- Find trains to a destination ----
-// A small built-in directory (illustrative — not live data) so someone who
-// doesn't know their train number can still find one that runs where they're going.
+// A built-in directory (illustrative demo data, not a live IRCTC feed —
+// there's no live national train database wired up here) covering the
+// major corridors out of Kanpur, plus a couple of local passenger trains
+// for smaller Bundelkhand-region stations.
 const TRAIN_DIRECTORY = [
   { number: "12417", name: "Prayagraj Express", from: "Kanpur Central", to: "New Delhi", departure: "22:35", via: ["Kanpur Central", "Etawah", "Tundla", "Aligarh", "New Delhi"] },
   { number: "12559", name: "Shiv Ganga Express", from: "Kanpur Central", to: "New Delhi", departure: "04:50", via: ["Kanpur Central", "Kanpur Anwarganj", "Tundla", "New Delhi"] },
+  { number: "12034", name: "Kanpur Shatabdi", from: "Kanpur Central", to: "New Delhi", departure: "19:20", via: ["Kanpur Central", "Tundla", "New Delhi"] },
   { number: "12303", name: "Poorva Express", from: "Kanpur Central", to: "Howrah Junction", departure: "03:10", via: ["Kanpur Central", "Prayagraj", "Varanasi", "Patna", "Howrah Junction"] },
   { number: "13005", name: "Amritsar Mail", from: "Kanpur Central", to: "Kolkata", departure: "01:20", via: ["Kanpur Central", "Lucknow", "Patna", "Kolkata"] },
   { number: "11016", name: "Kushinagar Express", from: "Kanpur Central", to: "Mumbai CST", departure: "14:05", via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Mumbai CST"] },
   { number: "12141", name: "Patna–LTT Express", from: "Kanpur Central", to: "Mumbai LTT", departure: "09:40", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Mumbai LTT"] },
+  { number: "11077", name: "Jhelum Express", from: "Kanpur Central", to: "Pune", departure: "10:05", via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Manmad", "Pune"] },
   { number: "12724", name: "Telangana Express", from: "Kanpur Central", to: "Hyderabad", departure: "02:30", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Hyderabad"] },
   { number: "12622", name: "Tamil Nadu Express", from: "Kanpur Central", to: "Chennai Central", departure: "05:15", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Chennai Central"] },
+  { number: "12627", name: "Karnataka Express", from: "Kanpur Central", to: "Bengaluru", departure: "08:40", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Secunderabad", "Bengaluru"] },
+  { number: "19168", name: "Sabarmati Express", from: "Kanpur Central", to: "Ahmedabad", departure: "12:15", via: ["Kanpur Central", "Jhansi", "Kota", "Ahmedabad"] },
+  { number: "19038", name: "Avantika Express", from: "Kanpur Central", to: "Indore", departure: "19:15", via: ["Kanpur Central", "Jhansi", "Bhopal", "Ujjain", "Indore"] },
+  { number: "14853", name: "Marudhar Express", from: "Kanpur Central", to: "Jaipur", departure: "17:10", via: ["Kanpur Central", "Agra", "Jaipur"] },
+  { number: "14649", name: "Amritsar Express", from: "Kanpur Central", to: "Amritsar", departure: "23:10", via: ["Kanpur Central", "Tundla", "Ambala", "Amritsar"] },
+  { number: "13009", name: "Doon Express", from: "Kanpur Central", to: "Dehradun", departure: "18:30", via: ["Kanpur Central", "Lucknow", "Bareilly", "Dehradun"] },
+  { number: "15933", name: "Kamrup Express", from: "Kanpur Central", to: "Guwahati", departure: "15:20", via: ["Kanpur Central", "Lucknow", "Patna", "Guwahati"] },
+  { number: "12876", name: "Neelachal Express", from: "Kanpur Central", to: "Bhubaneswar", departure: "20:00", via: ["Kanpur Central", "Prayagraj", "Varanasi", "Bhubaneswar"] },
   { number: "12489", name: "Seemanchal Express", from: "Kanpur Central", to: "Patna", departure: "11:45", via: ["Kanpur Central", "Lucknow", "Varanasi", "Patna"] },
   { number: "12403", name: "Bhopal–Kanpur Express", from: "Kanpur Central", to: "Bhopal", departure: "06:20", via: ["Kanpur Central", "Jhansi", "Bhopal"] },
-  { number: "12034", name: "Kanpur Shatabdi", from: "Kanpur Central", to: "New Delhi", departure: "19:20", via: ["Kanpur Central", "Tundla", "New Delhi"] },
-  { number: "14853", name: "Marudhar Express", from: "Kanpur Central", to: "Jaipur", departure: "17:10", via: ["Kanpur Central", "Agra", "Jaipur"] },
+  { number: "14211", name: "Chambal Express", from: "Kanpur Central", to: "Gwalior", departure: "13:35", via: ["Kanpur Central", "Etawah", "Jhansi", "Gwalior"] },
+  { number: "51905", name: "Kanpur–Manikpur Passenger", from: "Kanpur Central", to: "Manikpur", departure: "06:10", via: ["Kanpur Central", "Fatehpur", "Banda", "Atarra", "Manikpur"] },
 ];
+
+// Smaller stations that aren't a direct destination in the directory above,
+// mapped to the nearest major junction we do have trains for.
+const NEARBY_MAJOR_STATION = {
+  chitrakoot: "Manikpur",
+  karwi: "Manikpur",
+  banda: "Manikpur",
+  hamirpur: "Jhansi",
+  mahoba: "Jhansi",
+  orai: "Jhansi",
+  auraiya: "Kanpur Central",
+  unnao: "Lucknow",
+  raebareli: "Lucknow",
+  sitapur: "Lucknow",
+  moradabad: "Bareilly",
+};
 
 const searchDestinationInput = document.getElementById("searchDestination");
 const searchTrainsBtn = document.getElementById("searchTrainsBtn");
 const searchResults = document.getElementById("searchResults");
 
-function renderTrainResults(matches, needle) {
+function findTrainsTo(needle) {
+  const q = needle.toLowerCase();
+  return TRAIN_DIRECTORY.filter(
+    (t) => t.to.toLowerCase().includes(q) || t.via.some((v) => v.toLowerCase().includes(q))
+  );
+}
+
+async function attachLiveWaitlist(number, cellId) {
+  const cell = document.getElementById(cellId);
+  if (!cell) return;
+  try {
+    const res = await fetch(`/api/queue/${number}`);
+    if (!res.ok) throw new Error("bad status");
+    const data = await res.json();
+    cell.textContent = `${data.length} in waitlist`;
+  } catch (err) {
+    cell.textContent = "Live waitlist unavailable";
+  }
+}
+
+function renderTrainResults(matches, needle, note) {
   if (!matches.length) {
-    searchResults.innerHTML = `<p class="search-empty">No trains found for "${needle}" in our directory — try a nearby major station, or enter a train number above if you already know it.</p>`;
+    searchResults.innerHTML = `<p class="search-empty">No trains found for "${needle}" in our directory — try a nearby major station, or enter a train number above if you already know it. This is a demo directory, not a live national database.</p>`;
     return;
   }
-  searchResults.innerHTML = matches
-    .map(
-      (t) => `
+  const noteHtml = note ? `<p class="search-note">${note}</p>` : "";
+  searchResults.innerHTML =
+    noteHtml +
+    matches
+      .map(
+        (t, i) => `
       <div class="train-result" data-number="${t.number}">
         <div class="train-result-info">
           <span class="train-result-title">${t.number} · ${t.name}</span>
           <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}</span>
+          <span class="train-result-wl mono" id="wl-${i}-${t.number}">Checking live waitlist…</span>
         </div>
         <button type="button" class="track-result-btn">Track this train</button>
       </div>`
-    )
-    .join("");
+      )
+      .join("");
+
+  matches.forEach((t, i) => attachLiveWaitlist(t.number, `wl-${i}-${t.number}`));
 
   searchResults.querySelectorAll(".track-result-btn").forEach((btn, i) => {
     btn.addEventListener("click", () => {
@@ -75,15 +129,25 @@ function renderTrainResults(matches, needle) {
 
 if (searchTrainsBtn) {
   searchTrainsBtn.addEventListener("click", () => {
-    const needle = searchDestinationInput.value.trim().toLowerCase();
-    if (!needle) {
+    const raw = searchDestinationInput.value.trim();
+    if (!raw) {
       searchResults.innerHTML = `<p class="search-empty">Type a destination station to search.</p>`;
       return;
     }
-    const matches = TRAIN_DIRECTORY.filter(
-      (t) => t.to.toLowerCase().includes(needle) || t.via.some((v) => v.toLowerCase().includes(needle))
-    );
-    renderTrainResults(matches, searchDestinationInput.value.trim());
+
+    let matches = findTrainsTo(raw);
+    let note = "";
+
+    if (!matches.length) {
+      const key = raw.toLowerCase().replace(/\s+/g, "");
+      const majorStation = NEARBY_MAJOR_STATION[key];
+      if (majorStation) {
+        matches = findTrainsTo(majorStation);
+        note = `No direct trains found to "${raw}" — showing trains to ${majorStation}, the nearest major junction in our directory.`;
+      }
+    }
+
+    renderTrainResults(matches, raw, note);
   });
   searchDestinationInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") searchTrainsBtn.click();
