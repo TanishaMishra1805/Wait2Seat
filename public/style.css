@@ -366,7 +366,15 @@ h1, h2 { font-family: var(--display); }
 .train-result-title { font-weight: 600; color: var(--coach-red-deep); font-size: 0.95rem; }
 .train-result-route { font-size: 0.82rem; color: var(--muted); }
 .train-result-route .mono { color: var(--steel); }
+.train-result-wl { display: block; font-size: 0.78rem; color: var(--amber); margin-top: 2px; }
 .train-result button { flex-shrink: 0; padding: 8px 14px; font-size: 0.82rem; }
+
+.search-note {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  color: var(--amber);
+  font-weight: 600;
+}
 
 .search-empty { color: var(--muted); font-size: 0.88rem; }
 
