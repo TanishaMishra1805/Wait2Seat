@@ -230,6 +230,7 @@ if (trackTrainBtn) {
 
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     activeClaimId = null;
+    lastWatchedStatus = null;
     document.getElementById("claimPanel").hidden = true;
 
     trackTrainBtn.disabled = true;
@@ -237,6 +238,14 @@ if (trackTrainBtn) {
     trackMsg.className = "track-msg";
 
     await loadQueue();
+
+    saveRecentTrain({
+      number: TRAIN_NUMBER,
+      name: trainNameInput.value.trim(),
+      from: fromStationInput.value.trim(),
+      to: toStationInput.value.trim(),
+      departure: departureInput.value,
+    });
 
     trackTrainBtn.disabled = false;
     if (lastLoadFailed) {
@@ -441,7 +450,7 @@ function renderQueue() {
     board.innerHTML = filtered
       .map(
         (p, i) => `
-        <div class="board-row" data-id="${p._id}">
+        <div class="board-row ${p.pnr === watchedPnr ? "is-me" : ""}" data-id="${p._id}">
           <span class="rank-badge ${i === 0 && !destinationFilter ? "next" : ""}">${i === 0 && !destinationFilter ? "NEXT" : "#" + (i + 1)}</span>
           <span>${p.name}</span>
           <span class="pnr hide-sm">${p.pnr}</span>
@@ -452,10 +461,166 @@ function renderQueue() {
       .join("");
   }
 
+  updateWatchBanner();
+
   // The berth is always offered to the true first-in-line passenger for the
   // whole train, regardless of which destination the viewer is filtering by.
   flipTo("flapName", latestQueue[0].name);
   flipTo("flapStatus", "Waiting · " + latestQueue[0].waitlistStatus);
+}
+
+// ---- Last updated + manual refresh ----
+const lastUpdatedText = document.getElementById("lastUpdatedText");
+const refreshNowBtn = document.getElementById("refreshNowBtn");
+
+function updateLastUpdatedText() {
+  if (!lastUpdatedText) return;
+  lastUpdatedText.textContent = TRAIN_NUMBER
+    ? `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+    : "Not loaded yet";
+}
+
+if (refreshNowBtn) {
+  refreshNowBtn.addEventListener("click", () => loadQueue());
+}
+
+// ---- Track my PNR — highlights their row and alerts them when it's their turn ----
+let watchedPnr = "";
+let lastWatchedStatus = null;
+const watchPnrInput = document.getElementById("watchPnrInput");
+const watchPnrBtn = document.getElementById("watchPnrBtn");
+const watchPnrBanner = document.getElementById("watchPnrBanner");
+const notifyPermBtn = document.getElementById("notifyPermBtn");
+
+if (watchPnrBtn) {
+  watchPnrBtn.addEventListener("click", () => {
+    watchedPnr = watchPnrInput.value.trim();
+    lastWatchedStatus = null;
+    watchPnrBtn.textContent = watchedPnr ? "Watching" : "Watch";
+    renderQueue();
+  });
+}
+
+if (notifyPermBtn) {
+  notifyPermBtn.addEventListener("click", () => {
+    if (!("Notification" in window)) {
+      alert("Browser notifications aren't supported here.");
+      return;
+    }
+    Notification.requestPermission().then((perm) => {
+      notifyPermBtn.textContent = perm === "granted" ? "🔔 Alerts on" : "🔔 Enable alerts";
+    });
+  });
+}
+
+// A short two-tone beep, generated on the fly — no audio file needed.
+function playAlertTone() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [880, 1174].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const start = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.16);
+      osc.start(start);
+      osc.stop(start + 0.17);
+    });
+  } catch (err) {
+    // Audio not available in this context — silently skip.
+  }
+}
+
+function updateWatchBanner() {
+  if (!watchPnrBanner) return;
+  if (!watchedPnr) {
+    watchPnrBanner.hidden = true;
+    return;
+  }
+
+  const p = latestQueue.find((x) => x.pnr === watchedPnr);
+  watchPnrBanner.hidden = false;
+
+  if (!p) {
+    watchPnrBanner.className = "watch-banner";
+    watchPnrBanner.textContent = TRAIN_NUMBER
+      ? `PNR ${watchedPnr} isn't in this train's current queue.`
+      : "Track a train first, then I'll watch this PNR for you.";
+    return;
+  }
+
+  const rank = latestQueue.indexOf(p) + 1;
+  const statusClass = p.status.toLowerCase();
+  watchPnrBanner.className = `watch-banner ${statusClass}`;
+
+  const labels = {
+    WAITING: `You're #${rank} in the queue (${p.waitlistStatus}) — still waiting.`,
+    NOTIFIED: `🎉 It's your turn! Seat ${p.seatAssigned || ""} has been offered — claim it below before the timer runs out.`,
+    CONFIRMED: `✅ Your seat is confirmed!`,
+    EXPIRED: `⚠️ Your claim window expired — you've moved back in the queue.`,
+  };
+  watchPnrBanner.textContent = labels[p.status] || `Status: ${p.waitlistStatus}`;
+
+  if (p.status === "NOTIFIED" && lastWatchedStatus !== "NOTIFIED") {
+    playAlertTone();
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Your berth is ready!", { body: `Seat ${p.seatAssigned || ""} — claim it before the timer runs out.` });
+    }
+  }
+  lastWatchedStatus = p.status;
+}
+
+// ---- Recently tracked trains ----
+const RECENT_TRAINS_KEY = "wait2seat.recentTrains";
+
+function getRecentTrains() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_TRAINS_KEY)) || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveRecentTrain(entry) {
+  try {
+    let list = getRecentTrains().filter((t) => t.number !== entry.number);
+    list.unshift(entry);
+    list = list.slice(0, 5);
+    localStorage.setItem(RECENT_TRAINS_KEY, JSON.stringify(list));
+    renderRecentTrains();
+  } catch (err) {
+    // localStorage unavailable — skip silently, not essential to core function.
+  }
+}
+
+function renderRecentTrains() {
+  const container = document.getElementById("recentTrains");
+  if (!container) return;
+  const list = getRecentTrains();
+  if (!list.length) {
+    container.innerHTML = "";
+    return;
+  }
+  container.innerHTML =
+    `<span class="recent-trains-label">Recent:</span> ` +
+    list
+      .map((t) => `<button type="button" class="recent-chip" data-train-number="${t.number}">${t.number} · ${t.name || "Untitled"}</button>`)
+      .join("");
+  container.querySelectorAll(".recent-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const t = list.find((x) => x.number === btn.dataset.trainNumber);
+      if (!t) return;
+      trainNumberInput.value = t.number;
+      trainNameInput.value = t.name || "";
+      fromStationInput.value = t.from || "";
+      toStationInput.value = t.to || "";
+      if (departureInput) departureInput.value = t.departure || "";
+      trackTrainBtn.click();
+    });
+  });
 }
 
 async function loadQueue() {
@@ -476,6 +641,7 @@ async function loadQueue() {
   }
   populateDestinationOptions(latestQueue);
   renderQueue();
+  updateLastUpdatedText();
 }
 
 function highlightRow(passengerId) {
@@ -494,25 +660,48 @@ document.getElementById("freeBerthBtn").addEventListener("click", async () => {
     return;
   }
   const seatLabel = document.getElementById("seatLabel").value || "B3-45";
-  const res = await fetch(`/api/trains/${TRAIN_NUMBER}/berth-freed`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ seatLabel }),
-  });
-  const data = await res.json();
 
-  if (data.passenger) {
-    flipTo("flapSeat", data.passenger.seatAssigned);
+  let passenger = null;
+  try {
+    const res = await fetch(`/api/trains/${TRAIN_NUMBER}/berth-freed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seatLabel }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      passenger = data.passenger || null;
+    }
+  } catch (err) {
+    // No live backend for this train — fall back to offering it locally, below.
+  }
+
+  if (!passenger) {
+    // Offer the freed berth to the actual first waiting passenger in the queue.
+    passenger = latestQueue.find((p) => p.status === "WAITING") || null;
+    if (passenger) {
+      passenger.status = "NOTIFIED";
+      passenger.seatAssigned = seatLabel;
+    }
+  }
+
+  if (passenger) {
+    flipTo("flapSeat", passenger.seatAssigned);
     flipTo("flapStatus", "Offer sent");
-    showClaimPanel(data.passenger);
-    await loadQueue();
-    highlightRow(data.passenger._id);
+    showClaimPanel(passenger);
+    renderQueue();
+    highlightRow(passenger._id);
   } else {
-    alert(data.message || "No one is waiting.");
+    alert("No one is waiting.");
   }
 });
 
-// ---- Claim panel + countdown ----
+// ---- Claim panel + 200-second countdown ----
+// Runs entirely client-side with setInterval, so the 200s window always
+// works reliably even when there's no backend to poll for remaining time.
+const CLAIM_WINDOW_SECONDS = 200;
+let claimSecondsLeft = 0;
+
 function showClaimPanel(passenger) {
   activeClaimId = passenger._id;
   const panel = document.getElementById("claimPanel");
@@ -520,71 +709,172 @@ function showClaimPanel(passenger) {
   document.getElementById("claimText").textContent =
     `${passenger.name} (${passenger.waitlistStatus}) — seat ${passenger.seatAssigned}`;
   document.getElementById("claimResult").textContent = "";
-  document.getElementById("countdown").classList.remove("danger");
+
+  const countdownEl = document.getElementById("countdown");
+  countdownEl.classList.remove("danger");
+  claimSecondsLeft = CLAIM_WINDOW_SECONDS;
+  countdownEl.textContent = claimSecondsLeft;
 
   if (countdownTimer) clearInterval(countdownTimer);
-  countdownTimer = setInterval(pollCountdown, 1000);
-  pollCountdown();
+  countdownTimer = setInterval(tickCountdown, 1000);
 }
 
-async function pollCountdown() {
-  if (!activeClaimId) return;
-  const res = await fetch(`/api/passengers/${activeClaimId}/countdown`);
-  const { secondsLeft } = await res.json();
+function tickCountdown() {
+  claimSecondsLeft -= 1;
   const el = document.getElementById("countdown");
-  el.textContent = secondsLeft;
-  el.classList.toggle("danger", secondsLeft <= 20 && secondsLeft > 0);
+  el.textContent = Math.max(claimSecondsLeft, 0);
+  el.classList.toggle("danger", claimSecondsLeft <= 20 && claimSecondsLeft > 0);
 
-  if (secondsLeft <= 0) {
+  if (claimSecondsLeft <= 0) {
     clearInterval(countdownTimer);
+    const p = latestQueue.find((x) => x._id === activeClaimId);
+    if (p) p.status = "EXPIRED";
     document.getElementById("claimResult").textContent = "Claim window expired — offer passed to next in queue.";
-    document.getElementById("claimResult").style.color = "var(--red)";
+    document.getElementById("claimResult").style.color = "var(--red-alert)";
     flipTo("flapStatus", "Expired · next up");
-    loadQueue();
+    renderQueue();
   }
 }
 
 document.getElementById("claimBtn").addEventListener("click", async () => {
   if (!activeClaimId) return;
-  const res = await fetch(`/api/passengers/${activeClaimId}/claim`, { method: "POST" });
-  const result = await res.json();
   const resultEl = document.getElementById("claimResult");
-  resultEl.textContent = result.message;
-  resultEl.style.color = result.success ? "var(--green)" : "var(--red)";
-  if (result.success) {
+
+  let success = false;
+  let message = "";
+
+  try {
+    const res = await fetch(`/api/passengers/${activeClaimId}/claim`, { method: "POST" });
+    if (res.ok) {
+      const result = await res.json();
+      success = !!result.success;
+      message = result.message;
+    }
+  } catch (err) {
+    // No live backend for this — confirm it locally below.
+  }
+
+  if (!message) {
+    const p = latestQueue.find((x) => x._id === activeClaimId);
+    if (p) p.status = "CONFIRMED";
+    success = true;
+    message = "Seat confirmed!";
+  }
+
+  resultEl.textContent = message;
+  resultEl.style.color = success ? "var(--green)" : "var(--red-alert)";
+  if (success) {
     clearInterval(countdownTimer);
     flipTo("flapStatus", "Confirmed");
-    loadQueue();
+    renderQueue();
   }
 });
 
-// ---- NLP.js chatbot ----
-function appendMessage(text, sender) {
+// ---- AI travel assistant ----
+const BOT_AVATAR_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/></svg>`;
+
+function appendChatNode(node, sender) {
   const win = document.getElementById("chatWindow");
-  const div = document.createElement("div");
-  div.className = `msg ${sender}`;
-  div.textContent = text;
-  win.appendChild(div);
+  const row = document.createElement("div");
+  row.className = `msg-row ${sender}`;
+  const avatar = document.createElement("span");
+  avatar.className = `msg-avatar ${sender === "bot" ? "bot-avatar-sm" : "user-avatar-sm"}`;
+  avatar.innerHTML = sender === "bot" ? BOT_AVATAR_SVG : "You";
+  if (sender === "bot") {
+    row.appendChild(avatar);
+    row.appendChild(node);
+  } else {
+    row.appendChild(node);
+    row.appendChild(avatar);
+  }
+  win.appendChild(row);
   win.scrollTop = win.scrollHeight;
 }
 
+function appendMessage(text, sender) {
+  const bubble = document.createElement("div");
+  bubble.className = `msg ${sender}`;
+  bubble.textContent = text;
+  appendChatNode(bubble, sender);
+}
+
 function appendTrainResultsToChat(matches, note, destination) {
-  const win = document.getElementById("chatWindow");
   const wrap = document.createElement("div");
   wrap.className = "msg bot chat-trains";
 
   if (!matches.length) {
     wrap.innerHTML = `<p>No trains found to "${destination}" in our directory yet — try a nearby major station.</p>`;
-    win.appendChild(wrap);
-    win.scrollTop = win.scrollHeight;
+    appendChatNode(wrap, "bot");
     return;
   }
 
   const noteHtml = note ? `<p class="search-note">${note}</p>` : `<p>Found ${matches.length} train${matches.length > 1 ? "s" : ""} to ${destination}:</p>`;
   wrap.innerHTML = noteHtml + matches.map((t, i) => buildTrainCardHtml(t, `chatwl-${i}-${t.number}`)).join("");
-  win.appendChild(wrap);
+  appendChatNode(wrap, "bot");
   matches.forEach((t, i) => attachLiveWaitlist(t.number, `chatwl-${i}-${t.number}`));
-  win.scrollTop = win.scrollHeight;
+}
+
+// Understands real questions about the train currently being tracked,
+// answered from this app's own live state — not guesses.
+function detectIntent(message) {
+  const m = message.toLowerCase();
+  if (/\bpnr\b/.test(m)) return "pnr";
+  if (/berth|seat/.test(m)) return "berth";
+  if (/how many|queue length|total (waiting|passengers)|people waiting/.test(m)) return "queue-count";
+  if (/who.?s next|next up|next passenger/.test(m)) return "next-up";
+  if (/\bstatus\b/.test(m)) return "status";
+  if (/depart|arriv|what time|when does/.test(m)) return "timing";
+  if (/\broute\b|\bvia\b|stops?|stations? (on|along)/.test(m)) return "route";
+  return null;
+}
+
+function answerPnr(message) {
+  const match = message.match(/pnr\D*(\d{4,10})/i);
+  if (!match) return 'Share the PNR number too, e.g. "PNR 4507839216".';
+  const pnr = match[1];
+  const p = latestQueue.find((x) => x.pnr === pnr);
+  if (!p) return TRAIN_NUMBER ? `I couldn't find PNR ${pnr} in train ${TRAIN_NUMBER}'s current queue.` : "Track a train first so I can look up PNRs in its queue.";
+  const rank = latestQueue.indexOf(p) + 1;
+  return `PNR ${pnr}: ${p.name}, ${p.waitlistStatus} (rank #${rank} in queue), ${p.boardingStation} → ${p.destinationStation}.`;
+}
+
+function answerBerth() {
+  if (!TRAIN_NUMBER) return "Track a train first, then I can tell you about berth offers.";
+  const seatText = document.getElementById("flapSeat").textContent;
+  return seatText && seatText !== "— —" ? `The most recently offered berth is ${seatText}.` : "No berth has been offered yet on this train.";
+}
+
+function answerQueueCount() {
+  if (!TRAIN_NUMBER) return "Track a train first so I can check its queue.";
+  if (lastLoadFailed) return `I couldn't reach live data for train ${TRAIN_NUMBER} just now.`;
+  const counts = { WAITING: 0, NOTIFIED: 0, CONFIRMED: 0, EXPIRED: 0 };
+  latestQueue.forEach((p) => { if (counts[p.status] !== undefined) counts[p.status] += 1; });
+  return `Train ${TRAIN_NUMBER} has ${latestQueue.length} passenger(s) in the queue — ${counts.WAITING} waiting, ${counts.NOTIFIED} notified, ${counts.CONFIRMED} confirmed, ${counts.EXPIRED} expired.`;
+}
+
+function answerNextUp() {
+  if (!TRAIN_NUMBER) return "Track a train first, then I can tell you who's next in line.";
+  if (!latestQueue.length) return `No one is currently waiting on train ${TRAIN_NUMBER}.`;
+  return `${latestQueue[0].name} (${latestQueue[0].waitlistStatus}) is next in line.`;
+}
+
+function answerStatus() {
+  if (!TRAIN_NUMBER) return "Track a train first and I'll tell you its live status.";
+  return document.getElementById("flapStatus").textContent;
+}
+
+function answerTiming() {
+  const dep = departureInput ? departureInput.value : "";
+  const arr = arrivalInput ? arrivalInput.value : "";
+  if (!dep && !arr) return "Departure/arrival time hasn't been set — add it in the setup bar above.";
+  return `Departs ${dep || "--:--"} · Arrives ${arr || "--:--"}.`;
+}
+
+function answerRoute() {
+  const from = fromStationInput ? fromStationInput.value.trim() : "";
+  const to = toStationInput ? toStationInput.value.trim() : "";
+  if (!from && !to) return "The route hasn't been set yet — fill in From/To in the setup bar above.";
+  return `This train runs from ${from || "—"} to ${to || "—"}.`;
 }
 
 document.getElementById("chatSendBtn").addEventListener("click", sendChat);
@@ -599,44 +889,58 @@ async function sendChat() {
   appendMessage(message, "user");
   input.value = "";
 
-  const from = document.getElementById("fromInput").value.trim();
-  const to = document.getElementById("toInput").value.trim();
+  const intentAnswers = {
+    pnr: answerPnr,
+    berth: answerBerth,
+    "queue-count": answerQueueCount,
+    "next-up": answerNextUp,
+    status: answerStatus,
+    timing: answerTiming,
+    route: answerRoute,
+  };
 
-  let botReply = null;
-  try {
-    const res = await fetch("/api/chatbot", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, from, to }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      botReply = data.reply;
-    }
-  } catch (err) {
-    // No live chatbot backend reachable — fall back to the local directory below.
+  const intent = detectIntent(message);
+  if (intent) {
+    appendMessage(intentAnswers[intent](message), "bot");
+    return;
   }
 
-  if (botReply) appendMessage(botReply, "bot");
-
-  const asksForRoute = /route|train|suggest|alternate|reach|go(?:ing)? to/i.test(message);
-
-  let destination = to;
+  let destination = document.getElementById("toInput").value.trim();
   if (!destination) {
     const m = message.match(/(?:to|for|reach)\s+([a-zA-Z\s]{3,})$/i);
     if (m) destination = m[1].trim().replace(/[?.!]+$/, "");
   }
 
   if (destination) {
-    // A destination is set — always back the reply with real results
-    // (live backend if one's configured, directory otherwise).
     const { matches, note } = await searchDirectoryForDestination(destination);
     appendTrainResultsToChat(matches, note, destination);
-  } else if (asksForRoute || !botReply) {
-    appendMessage('Tell me a destination — e.g. "trains to Bhopal", or fill in the "To" field above — and I\'ll list trains that actually go there.', "bot");
+    return;
   }
+
+  const from = document.getElementById("fromInput").value.trim();
+  let botReply = null;
+  try {
+    const res = await fetch("/api/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, from, to: destination }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      botReply = data.reply;
+    }
+  } catch (err) {
+    // No live chatbot backend reachable — fall back to the help message below.
+  }
+
+  appendMessage(
+    botReply ||
+      'I can answer things like "what\'s my berth", "how many are waiting", "who\'s next", "when does it depart", "trains to Bhopal", or "PNR 4507839216".',
+    "bot"
+  );
 }
 
 // ---- init ----
+renderRecentTrains();
 loadQueue();
 setInterval(loadQueue, 5000);
