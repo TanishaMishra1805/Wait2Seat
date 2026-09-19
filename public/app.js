@@ -25,28 +25,28 @@ function flipTo(elId, newText) {
 // major corridors out of Kanpur, plus a couple of local passenger trains
 // for smaller Bundelkhand-region stations.
 const TRAIN_DIRECTORY = [
-  { number: "12417", name: "Prayagraj Express", from: "Kanpur Central", to: "New Delhi", departure: "22:35", via: ["Kanpur Central", "Etawah", "Tundla", "Aligarh", "New Delhi"] },
-  { number: "12559", name: "Shiv Ganga Express", from: "Kanpur Central", to: "New Delhi", departure: "04:50", via: ["Kanpur Central", "Kanpur Anwarganj", "Tundla", "New Delhi"] },
-  { number: "12034", name: "Kanpur Shatabdi", from: "Kanpur Central", to: "New Delhi", departure: "19:20", via: ["Kanpur Central", "Tundla", "New Delhi"] },
-  { number: "12303", name: "Poorva Express", from: "Kanpur Central", to: "Howrah Junction", departure: "03:10", via: ["Kanpur Central", "Prayagraj", "Varanasi", "Patna", "Howrah Junction"] },
-  { number: "13005", name: "Amritsar Mail", from: "Kanpur Central", to: "Kolkata", departure: "01:20", via: ["Kanpur Central", "Lucknow", "Patna", "Kolkata"] },
-  { number: "11016", name: "Kushinagar Express", from: "Kanpur Central", to: "Mumbai CST", departure: "14:05", via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Mumbai CST"] },
-  { number: "12141", name: "Patna–LTT Express", from: "Kanpur Central", to: "Mumbai LTT", departure: "09:40", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Mumbai LTT"] },
-  { number: "11077", name: "Jhelum Express", from: "Kanpur Central", to: "Pune", departure: "10:05", via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Manmad", "Pune"] },
-  { number: "12724", name: "Telangana Express", from: "Kanpur Central", to: "Hyderabad", departure: "02:30", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Hyderabad"] },
-  { number: "12622", name: "Tamil Nadu Express", from: "Kanpur Central", to: "Chennai Central", departure: "05:15", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Chennai Central"] },
-  { number: "12627", name: "Karnataka Express", from: "Kanpur Central", to: "Bengaluru", departure: "08:40", via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Secunderabad", "Bengaluru"] },
-  { number: "19168", name: "Sabarmati Express", from: "Kanpur Central", to: "Ahmedabad", departure: "12:15", via: ["Kanpur Central", "Jhansi", "Kota", "Ahmedabad"] },
-  { number: "19038", name: "Avantika Express", from: "Kanpur Central", to: "Indore", departure: "19:15", via: ["Kanpur Central", "Jhansi", "Bhopal", "Ujjain", "Indore"] },
-  { number: "14853", name: "Marudhar Express", from: "Kanpur Central", to: "Jaipur", departure: "17:10", via: ["Kanpur Central", "Agra", "Jaipur"] },
-  { number: "14649", name: "Amritsar Express", from: "Kanpur Central", to: "Amritsar", departure: "23:10", via: ["Kanpur Central", "Tundla", "Ambala", "Amritsar"] },
-  { number: "13009", name: "Doon Express", from: "Kanpur Central", to: "Dehradun", departure: "18:30", via: ["Kanpur Central", "Lucknow", "Bareilly", "Dehradun"] },
-  { number: "15933", name: "Kamrup Express", from: "Kanpur Central", to: "Guwahati", departure: "15:20", via: ["Kanpur Central", "Lucknow", "Patna", "Guwahati"] },
-  { number: "12876", name: "Neelachal Express", from: "Kanpur Central", to: "Bhubaneswar", departure: "20:00", via: ["Kanpur Central", "Prayagraj", "Varanasi", "Bhubaneswar"] },
-  { number: "12489", name: "Seemanchal Express", from: "Kanpur Central", to: "Patna", departure: "11:45", via: ["Kanpur Central", "Lucknow", "Varanasi", "Patna"] },
-  { number: "12403", name: "Bhopal–Kanpur Express", from: "Kanpur Central", to: "Bhopal", departure: "06:20", via: ["Kanpur Central", "Jhansi", "Bhopal"] },
-  { number: "14211", name: "Chambal Express", from: "Kanpur Central", to: "Gwalior", departure: "13:35", via: ["Kanpur Central", "Etawah", "Jhansi", "Gwalior"] },
-  { number: "51905", name: "Kanpur–Manikpur Passenger", from: "Kanpur Central", to: "Manikpur", departure: "06:10", via: ["Kanpur Central", "Fatehpur", "Banda", "Atarra", "Manikpur"] },
+  { number: "12417", name: "Prayagraj Express", from: "Kanpur Central", to: "New Delhi", departure: "22:35", durationHours: 5, via: ["Kanpur Central", "Etawah", "Tundla", "Aligarh", "New Delhi"] },
+  { number: "12559", name: "Shiv Ganga Express", from: "Kanpur Central", to: "New Delhi", departure: "04:50", durationHours: 6, via: ["Kanpur Central", "Kanpur Anwarganj", "Tundla", "New Delhi"] },
+  { number: "12034", name: "Kanpur Shatabdi", from: "Kanpur Central", to: "New Delhi", departure: "19:20", durationHours: 4.5, via: ["Kanpur Central", "Tundla", "New Delhi"] },
+  { number: "12303", name: "Poorva Express", from: "Kanpur Central", to: "Howrah Junction", departure: "03:10", durationHours: 14, via: ["Kanpur Central", "Prayagraj", "Varanasi", "Patna", "Howrah Junction"] },
+  { number: "13005", name: "Amritsar Mail", from: "Kanpur Central", to: "Kolkata", departure: "01:20", durationHours: 15, via: ["Kanpur Central", "Lucknow", "Patna", "Kolkata"] },
+  { number: "11016", name: "Kushinagar Express", from: "Kanpur Central", to: "Mumbai CST", departure: "14:05", durationHours: 18, via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Mumbai CST"] },
+  { number: "12141", name: "Patna–LTT Express", from: "Kanpur Central", to: "Mumbai LTT", departure: "09:40", durationHours: 19, via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Mumbai LTT"] },
+  { number: "11077", name: "Jhelum Express", from: "Kanpur Central", to: "Pune", departure: "10:05", durationHours: 20, via: ["Kanpur Central", "Jhansi", "Bhopal", "Itarsi", "Manmad", "Pune"] },
+  { number: "12724", name: "Telangana Express", from: "Kanpur Central", to: "Hyderabad", departure: "02:30", durationHours: 20, via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Hyderabad"] },
+  { number: "12622", name: "Tamil Nadu Express", from: "Kanpur Central", to: "Chennai Central", departure: "05:15", durationHours: 24, via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Chennai Central"] },
+  { number: "12627", name: "Karnataka Express", from: "Kanpur Central", to: "Bengaluru", departure: "08:40", durationHours: 26, via: ["Kanpur Central", "Jhansi", "Bhopal", "Nagpur", "Secunderabad", "Bengaluru"] },
+  { number: "19168", name: "Sabarmati Express", from: "Kanpur Central", to: "Ahmedabad", departure: "12:15", durationHours: 15, via: ["Kanpur Central", "Jhansi", "Kota", "Ahmedabad"] },
+  { number: "19038", name: "Avantika Express", from: "Kanpur Central", to: "Indore", departure: "19:15", durationHours: 13, via: ["Kanpur Central", "Jhansi", "Bhopal", "Ujjain", "Indore"] },
+  { number: "14853", name: "Marudhar Express", from: "Kanpur Central", to: "Jaipur", departure: "17:10", durationHours: 9, via: ["Kanpur Central", "Agra", "Jaipur"] },
+  { number: "14649", name: "Amritsar Express", from: "Kanpur Central", to: "Amritsar", departure: "23:10", durationHours: 15, via: ["Kanpur Central", "Tundla", "Ambala", "Amritsar"] },
+  { number: "13009", name: "Doon Express", from: "Kanpur Central", to: "Dehradun", departure: "18:30", durationHours: 10, via: ["Kanpur Central", "Lucknow", "Bareilly", "Dehradun"] },
+  { number: "15933", name: "Kamrup Express", from: "Kanpur Central", to: "Guwahati", departure: "15:20", durationHours: 24, via: ["Kanpur Central", "Lucknow", "Patna", "Guwahati"] },
+  { number: "12876", name: "Neelachal Express", from: "Kanpur Central", to: "Bhubaneswar", departure: "20:00", durationHours: 16, via: ["Kanpur Central", "Prayagraj", "Varanasi", "Bhubaneswar"] },
+  { number: "12489", name: "Seemanchal Express", from: "Kanpur Central", to: "Patna", departure: "11:45", durationHours: 7, via: ["Kanpur Central", "Lucknow", "Varanasi", "Patna"] },
+  { number: "12403", name: "Bhopal–Kanpur Express", from: "Kanpur Central", to: "Bhopal", departure: "06:20", durationHours: 9, via: ["Kanpur Central", "Jhansi", "Bhopal"] },
+  { number: "14211", name: "Chambal Express", from: "Kanpur Central", to: "Gwalior", departure: "13:35", durationHours: 5, via: ["Kanpur Central", "Etawah", "Jhansi", "Gwalior"] },
+  { number: "51905", name: "Kanpur–Manikpur Passenger", from: "Kanpur Central", to: "Manikpur", departure: "06:10", durationHours: 4, via: ["Kanpur Central", "Fatehpur", "Banda", "Atarra", "Manikpur"] },
 ];
 
 // Smaller stations that aren't a direct destination in the directory above,
@@ -132,7 +132,7 @@ function buildTrainCardHtml(t, cellId) {
     <div class="train-result" data-number="${t.number}">
       <div class="train-result-info">
         <span class="train-result-title">${t.number} · ${t.name}</span>
-        <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}</span>
+        <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}${t.durationHours ? ` · ~${t.durationHours}h journey` : ""}</span>
         <span class="train-result-wl mono" id="${cellId}">Checking live waitlist…</span>
       </div>
       <button type="button" class="track-result-btn" data-train-number="${t.number}">Track this train</button>
@@ -192,6 +192,10 @@ const stubCode = document.getElementById("stubCode");
 const trackTrainBtn = document.getElementById("trackTrainBtn");
 const trackMsg = document.getElementById("trackMsg");
 let lastLoadFailed = false;
+// null = not yet checked, true = real backend confirmed, false = none found —
+// once false, we stop re-hitting the API and just keep the local queue as-is
+// instead of wiping it out on every poll.
+let backendAvailable = null;
 
 function updateStubCode() {
   if (stubCode) stubCode.textContent = `WL · ${TRAIN_NUMBER || "— —"}`;
@@ -231,6 +235,8 @@ if (trackTrainBtn) {
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     activeClaimId = null;
     lastWatchedStatus = null;
+    backendAvailable = null;
+    latestQueue = [];
     document.getElementById("claimPanel").hidden = true;
 
     trackTrainBtn.disabled = true;
@@ -251,6 +257,9 @@ if (trackTrainBtn) {
     if (lastLoadFailed) {
       trackMsg.textContent = `Couldn't reach live data for train ${TRAIN_NUMBER}.`;
       trackMsg.className = "track-msg error";
+    } else if (backendAvailable === false) {
+      trackMsg.textContent = `Tracking train ${TRAIN_NUMBER}${trainNameInput.value.trim() ? " — " + trainNameInput.value.trim() : ""} in local demo mode — add passengers below and try "Release berth".`;
+      trackMsg.className = "track-msg success";
     } else {
       trackMsg.textContent = `Tracking train ${TRAIN_NUMBER}${trainNameInput.value.trim() ? " — " + trainNameInput.value.trim() : ""}.`;
       trackMsg.className = "track-msg success";
@@ -475,9 +484,12 @@ const refreshNowBtn = document.getElementById("refreshNowBtn");
 
 function updateLastUpdatedText() {
   if (!lastUpdatedText) return;
-  lastUpdatedText.textContent = TRAIN_NUMBER
-    ? `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-    : "Not loaded yet";
+  if (!TRAIN_NUMBER) {
+    lastUpdatedText.textContent = "Not loaded yet";
+    return;
+  }
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  lastUpdatedText.textContent = backendAvailable === false ? `Local demo mode · ${time}` : `Updated ${time}`;
 }
 
 if (refreshNowBtn) {
@@ -627,17 +639,36 @@ async function loadQueue() {
   if (!TRAIN_NUMBER) {
     latestQueue = [];
     lastLoadFailed = false;
+    backendAvailable = null;
     renderQueue();
     return;
   }
+
+  if (backendAvailable === false) {
+    // Already established there's no live backend for this train this
+    // session — stay in local demo mode and leave the in-memory queue
+    // (and anything the user has added to it) untouched.
+    renderQueue();
+    updateLastUpdatedText();
+    return;
+  }
+
   try {
     const res = await fetch(`/api/queue/${TRAIN_NUMBER}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     latestQueue = await res.json();
     lastLoadFailed = false;
+    backendAvailable = true;
   } catch (err) {
-    latestQueue = [];
-    lastLoadFailed = true;
+    if (backendAvailable === null) {
+      // First attempt for this train — settle into local demo mode rather
+      // than showing a scary error every 5 seconds.
+      backendAvailable = false;
+      lastLoadFailed = false;
+    } else {
+      // A backend was working before and just had a hiccup — that's worth flagging.
+      lastLoadFailed = true;
+    }
   }
   populateDestinationOptions(latestQueue);
   renderQueue();
