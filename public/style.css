@@ -1,6 +1,8 @@
 :root {
   --coach-red: #9c2b2b;
   --coach-red-deep: #6f1c1c;
+  --rail-blue: #1d4e89;
+  --rail-blue-deep: #123159;
   --cream: #f6ecd4;
   --paper: #fffaf0;
   --line: #ddc9a0;
@@ -11,6 +13,14 @@
   --green: #2f8f5d;
   --amber: #b3791f;
   --red-alert: #ad3a2c;
+
+  /* Per-class accent colors, purely for visual distinction between classes */
+  --class-ac1: #5b3fa0;
+  --class-ac2: #1d4e89;
+  --class-ac3: #1f8a8a;
+  --class-cc: #1f8a8a;
+  --class-sl: #b3791f;
+  --class-2s: #6b7280;
 
   --sans: 'Inter', -apple-system, sans-serif;
   --display: 'Fraunces', Georgia, serif;
@@ -32,7 +42,7 @@ h1, h2 { font-family: var(--display); }
 
 /* ---------- TOP BAR ---------- */
 
-.topbar { background: var(--coach-red); color: var(--cream); }
+.topbar { background: var(--rail-blue-deep); color: var(--cream); }
 .topbar-inner {
   max-width: 1100px;
   margin: 0 auto;
@@ -368,6 +378,25 @@ h1, h2 { font-family: var(--display); }
 .train-result-route .mono { color: var(--steel); }
 .train-result-wl { display: block; font-size: 0.78rem; color: var(--amber); margin-top: 2px; }
 .train-result button { flex-shrink: 0; padding: 8px 14px; font-size: 0.82rem; }
+
+.class-avail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+.class-chip {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px 3px 7px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  border-left: 3px solid var(--steel);
+}
+.class-chip.available { background: #e4f6ec; color: #1f6b45; border-color: #bfe8d1; }
+.class-chip.rac { background: #eaf1fb; color: #2a5aa6; border-color: #cddffa; }
+.class-chip.waitlist { background: #fff3dc; color: #7a5410; border-color: #f5dfa8; }
 
 .search-note {
   margin: 0 0 4px;
@@ -710,7 +739,7 @@ button:focus-visible { outline: 2px solid var(--coach-red-deep); outline-offset:
   width: 26px; height: 26px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--coach-red);
+  background: var(--rail-blue);
   color: var(--cream);
   display: flex;
   align-items: center;
@@ -751,7 +780,7 @@ button:focus-visible { outline: 2px solid var(--coach-red-deep); outline-offset:
   font-weight: 700;
   overflow: hidden;
 }
-.msg-avatar.bot-avatar-sm { background: var(--coach-red); color: var(--cream); }
+.msg-avatar.bot-avatar-sm { background: var(--rail-blue); color: var(--cream); }
 .msg-avatar.bot-avatar-sm svg { width: 10px !important; height: 10px !important; display: block; }
 .msg-avatar.user-avatar-sm { background: var(--ink); color: var(--cream); font-size: 0.5rem; }
 
