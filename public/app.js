@@ -133,10 +133,67 @@ function buildTrainCardHtml(t, cellId) {
       <div class="train-result-info">
         <span class="train-result-title">${t.number} · ${t.name}</span>
         <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}${t.durationHours ? ` · ~${t.durationHours}h journey` : ""}</span>
+        <div class="class-avail">${buildClassAvailabilityHtml(t.number)}</div>
         <span class="train-result-wl mono" id="${cellId}">Checking live waitlist…</span>
       </div>
       <button type="button" class="track-result-btn" data-train-number="${t.number}">Track this train</button>
     </div>`;
+}
+
+// ---- Class-wise seat availability (illustrative, not live PRS inventory) ----
+// Deterministic per train number + class so the same train always shows the
+// same numbers instead of jumping around on every search.
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100000;
+  return h;
+}
+function seededFraction(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getClassesForTrain(t) {
+  if (/shatabdi/i.test(t.name)) return ["CC", "EC"];
+  if (/passenger/i.test(t.name)) return ["2S", "SL"];
+  if (t.durationHours && t.durationHours >= 15) return ["SL", "3A", "2A", "1A"];
+  return ["SL", "3A", "2A"];
+}
+
+function getClassAvailability(trainNumber, cls) {
+  const seed = hashStr(trainNumber + cls);
+  const r = seededFraction(seed);
+  if (r < 0.3) {
+    const avail = Math.floor(seededFraction(seed + 1) * 45) + 1;
+    return { label: `AVL ${avail}`, type: "available" };
+  }
+  if (r < 0.45) {
+    const rac = Math.floor(seededFraction(seed + 2) * 15) + 1;
+    return { label: `RAC ${rac}`, type: "rac" };
+  }
+  return { label: `WL ${Math.floor(seededFraction(seed + 3) * 80) + 1}`, type: "waitlist" };
+}
+
+const CLASS_ACCENT = {
+  "1A": "var(--class-ac1)",
+  "2A": "var(--class-ac2)",
+  "3A": "var(--class-ac3)",
+  CC: "var(--class-cc)",
+  EC: "var(--class-cc)",
+  SL: "var(--class-sl)",
+  "2S": "var(--class-2s)",
+};
+
+function buildClassAvailabilityHtml(trainNumber) {
+  const entry = TRAIN_DIRECTORY.find((t) => t.number === trainNumber);
+  const classes = entry ? getClassesForTrain(entry) : ["SL", "3A", "2A"];
+  return classes
+    .map((cls) => {
+      const a = getClassAvailability(trainNumber, cls);
+      const accent = CLASS_ACCENT[cls] || "var(--steel)";
+      return `<span class="class-chip ${a.type}" style="border-left-color:${accent}">${cls} · ${a.label}</span>`;
+    })
+    .join("");
 }
 
 // Delegated so it works for cards rendered in either the search panel or the chat window.
