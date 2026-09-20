@@ -127,22 +127,9 @@ async function attachLiveWaitlist(number, cellId) {
   }
 }
 
-function buildTrainCardHtml(t, cellId) {
-  return `
-    <div class="train-result" data-number="${t.number}">
-      <div class="train-result-info">
-        <span class="train-result-title">${t.number} · ${t.name}</span>
-        <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}${t.durationHours ? ` · ~${t.durationHours}h journey` : ""}</span>
-        <div class="class-avail">${buildClassAvailabilityHtml(t.number)}</div>
-        <span class="train-result-wl mono" id="${cellId}">Checking live waitlist…</span>
-      </div>
-      <button type="button" class="track-result-btn" data-train-number="${t.number}">Track this train</button>
-    </div>`;
-}
-
-// ---- Class-wise seat availability (illustrative, not live PRS inventory) ----
-// Deterministic per train number + class so the same train always shows the
-// same numbers instead of jumping around on every search.
+// ---- Class-wise seat availability + fare (illustrative, not live PRS inventory) ----
+// Deterministic per train + class + selected date, so numbers stay stable
+// for a given date instead of jumping around on every re-render.
 function hashStr(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100000;
@@ -160,8 +147,8 @@ function getClassesForTrain(t) {
   return ["SL", "3A", "2A"];
 }
 
-function getClassAvailability(trainNumber, cls) {
-  const seed = hashStr(trainNumber + cls);
+function getClassAvailability(trainNumber, cls, dateKey) {
+  const seed = hashStr(trainNumber + cls + dateKey);
   const r = seededFraction(seed);
   if (r < 0.3) {
     const avail = Math.floor(seededFraction(seed + 1) * 45) + 1;
@@ -174,6 +161,14 @@ function getClassAvailability(trainNumber, cls) {
   return { label: `WL ${Math.floor(seededFraction(seed + 3) * 80) + 1}`, type: "waitlist" };
 }
 
+const CLASS_BASE_RATE = { SL: 0.9, "3A": 2.3, "2A": 3.4, "1A": 5.8, CC: 1.9, EC: 2.6, "2S": 0.5 };
+function getClassPrice(t, cls, dateKey) {
+  const seed = hashStr(t.number + cls + dateKey + "price");
+  const variance = 0.92 + seededFraction(seed) * 0.16;
+  const base = (t.durationHours || 5) * 55 * (CLASS_BASE_RATE[cls] || 1);
+  return Math.max(75, Math.round((base * variance) / 5) * 5);
+}
+
 const CLASS_ACCENT = {
   "1A": "var(--class-ac1)",
   "2A": "var(--class-ac2)",
@@ -183,17 +178,39 @@ const CLASS_ACCENT = {
   SL: "var(--class-sl)",
   "2S": "var(--class-2s)",
 };
+const AC_CLASSES = ["1A", "2A", "3A", "CC", "EC"];
 
-function buildClassAvailabilityHtml(trainNumber) {
+function buildClassAvailabilityHtml(trainNumber, dateKey) {
   const entry = TRAIN_DIRECTORY.find((t) => t.number === trainNumber);
   const classes = entry ? getClassesForTrain(entry) : ["SL", "3A", "2A"];
   return classes
     .map((cls) => {
-      const a = getClassAvailability(trainNumber, cls);
+      const a = getClassAvailability(trainNumber, cls, dateKey);
+      const price = entry ? getClassPrice(entry, cls, dateKey) : null;
       const accent = CLASS_ACCENT[cls] || "var(--steel)";
-      return `<span class="class-chip ${a.type}" style="border-left-color:${accent}">${cls} · ${a.label}</span>`;
+      return `<div class="class-chip ${a.type}" style="border-left-color:${accent}">
+        <span class="cc-top"><span>${cls}</span>${price ? `<span>₹${price}</span>` : ""}</span>
+        <span class="cc-status">${a.label}</span>
+      </div>`;
     })
     .join("");
+}
+
+function buildTrainCardHtml(t, cellId, dateKey) {
+  return `
+    <div class="train-result" data-number="${t.number}">
+      <div class="train-result-info">
+        <span class="train-result-title">${t.number} · ${t.name}</span>
+        <span class="train-result-route mono">${t.from} → ${t.to} · departs ${t.departure}${t.durationHours ? ` · ~${t.durationHours}h journey` : ""}</span>
+        <div class="class-avail">${buildClassAvailabilityHtml(t.number, dateKey || todaysDateKey())}</div>
+        <span class="train-result-wl mono" id="${cellId}">Checking live waitlist…</span>
+      </div>
+      <button type="button" class="track-result-btn" data-train-number="${t.number}">Track this train</button>
+    </div>`;
+}
+
+function todaysDateKey() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 // Delegated so it works for cards rendered in either the search panel or the chat window.
@@ -211,14 +228,103 @@ document.addEventListener("click", (e) => {
   document.querySelector(".queue-panel").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-function renderTrainResults(matches, needle, note) {
-  if (!matches.length) {
+// ---- Search state: date, sort, filters — all genuinely re-filter/re-sort the last results ----
+let lastSearchMatches = [];
+let lastSearchNeedle = "";
+let lastSearchNote = "";
+let selectedSearchDate = new Date();
+let sortMode = "default";
+
+const searchControls = document.getElementById("searchControls");
+const searchDateStrip = document.getElementById("searchDateStrip");
+const filterAvailableOnly = document.getElementById("filterAvailableOnly");
+const filterAcOnly = document.getElementById("filterAcOnly");
+
+function dateKeyFor(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+function renderDateStrip() {
+  if (!searchDateStrip) return;
+  const days = [];
+  for (let i = 0; i < 10; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    days.push(d);
+  }
+  searchDateStrip.innerHTML = days
+    .map((d, i) => {
+      const active = dateKeyFor(d) === dateKeyFor(selectedSearchDate);
+      const dow = d.toLocaleDateString([], { weekday: "short" });
+      const dom = d.toLocaleDateString([], { day: "2-digit", month: "short" });
+      return `<button type="button" class="date-chip ${active ? "active" : ""}" data-idx="${i}"><span class="dow">${dow}</span><span class="dom">${dom}</span></button>`;
+    })
+    .join("");
+  searchDateStrip.querySelectorAll(".date-chip").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      selectedSearchDate = d;
+      renderDateStrip();
+      applySearchFiltersAndRender();
+    });
+  });
+}
+
+function trainHasAcClass(t) {
+  return getClassesForTrain(t).some((c) => AC_CLASSES.includes(c));
+}
+function trainHasAvailableClass(t, dateKey) {
+  return getClassesForTrain(t).some((c) => getClassAvailability(t.number, c, dateKey).type === "available");
+}
+
+function applySearchFiltersAndRender() {
+  const dateKey = dateKeyFor(selectedSearchDate);
+  let list = [...lastSearchMatches];
+
+  if (filterAvailableOnly && filterAvailableOnly.checked) {
+    list = list.filter((t) => trainHasAvailableClass(t, dateKey));
+  }
+  if (filterAcOnly && filterAcOnly.checked) {
+    list = list.filter((t) => trainHasAcClass(t));
+  }
+
+  if (sortMode === "departure") {
+    list.sort((a, b) => a.departure.localeCompare(b.departure));
+  } else if (sortMode === "duration") {
+    list.sort((a, b) => (a.durationHours || 0) - (b.durationHours || 0));
+  }
+
+  renderTrainResults(list, lastSearchNeedle, lastSearchNote, dateKey, list.length !== lastSearchMatches.length);
+}
+
+document.querySelectorAll(".sort-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    sortMode = btn.dataset.sort;
+    document.querySelectorAll(".sort-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    applySearchFiltersAndRender();
+  });
+});
+if (filterAvailableOnly) filterAvailableOnly.addEventListener("change", applySearchFiltersAndRender);
+if (filterAcOnly) filterAcOnly.addEventListener("change", applySearchFiltersAndRender);
+
+function renderTrainResults(matches, needle, note, dateKey, filtered) {
+  if (!lastSearchMatches.length) {
     searchResults.innerHTML = `<p class="search-empty">No trains found for "${needle}" in our directory — try a nearby major station, or enter a train number above if you already know it. This is a demo directory, not a live national database.</p>`;
+    if (searchControls) searchControls.hidden = true;
     return;
   }
+  if (searchControls) searchControls.hidden = false;
+
+  if (!matches.length) {
+    searchResults.innerHTML = `<p class="search-empty">No trains match these filters for "${needle}". Try clearing "Available only" or "AC only".</p>`;
+    return;
+  }
+
   const noteHtml = note ? `<p class="search-note">${note}</p>` : "";
+  const filterHtml = filtered ? `<p class="search-note">Showing ${matches.length} of ${lastSearchMatches.length} trains after filters.</p>` : "";
   searchResults.innerHTML =
-    noteHtml + matches.map((t, i) => buildTrainCardHtml(t, `wl-${i}-${t.number}`)).join("");
+    noteHtml + filterHtml + matches.map((t, i) => buildTrainCardHtml(t, `wl-${i}-${t.number}`, dateKey)).join("");
   matches.forEach((t, i) => attachLiveWaitlist(t.number, `wl-${i}-${t.number}`));
 }
 
@@ -227,11 +333,21 @@ if (searchTrainsBtn) {
     const raw = searchDestinationInput.value.trim();
     if (!raw) {
       searchResults.innerHTML = `<p class="search-empty">Type a destination station to search.</p>`;
+      if (searchControls) searchControls.hidden = true;
       return;
     }
     searchResults.innerHTML = `<p class="search-empty">Searching…</p>`;
+    if (searchControls) searchControls.hidden = true;
     const { matches, note } = await searchDirectoryForDestination(raw);
-    renderTrainResults(matches, raw, note);
+    lastSearchMatches = matches;
+    lastSearchNeedle = raw;
+    lastSearchNote = note;
+    sortMode = "default";
+    document.querySelectorAll(".sort-btn").forEach((b) => b.classList.toggle("active", b.dataset.sort === "default"));
+    if (filterAvailableOnly) filterAvailableOnly.checked = false;
+    if (filterAcOnly) filterAcOnly.checked = false;
+    renderDateStrip();
+    applySearchFiltersAndRender();
   });
   searchDestinationInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") searchTrainsBtn.click();
@@ -637,6 +753,13 @@ function updateWatchBanner() {
     playAlertTone();
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("Your berth is ready!", { body: `Seat ${p.seatAssigned || ""} — claim it before the timer runs out.` });
+    }
+    // This is genuinely your turn — jump straight to the claim panel and its countdown.
+    const claimPanelEl = document.getElementById("claimPanel");
+    if (claimPanelEl && !claimPanelEl.hidden) {
+      claimPanelEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      claimPanelEl.classList.add("just-yours");
+      setTimeout(() => claimPanelEl.classList.remove("just-yours"), 2600);
     }
   }
   lastWatchedStatus = p.status;
