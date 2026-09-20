@@ -6,7 +6,7 @@
 <title>Wait2Seat — 12345 Kanpur Superfast Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=18" />
+<link rel="stylesheet" href="style.css?v=20" />
 </head>
 <body>
 
@@ -115,6 +115,19 @@
         <div class="search-row">
           <input id="searchDestination" placeholder="e.g. New Delhi, Mumbai, Kolkata…" autocomplete="off" />
           <button type="button" id="searchTrainsBtn">Find trains</button>
+        </div>
+        <div id="searchControls" class="search-controls" hidden>
+          <div id="searchDateStrip" class="date-strip"></div>
+          <div class="search-toolbar">
+            <div class="sort-group">
+              <span class="toolbar-label">Sort</span>
+              <button type="button" class="sort-btn active" data-sort="default">Default</button>
+              <button type="button" class="sort-btn" data-sort="departure">Departure</button>
+              <button type="button" class="sort-btn" data-sort="duration">Duration</button>
+            </div>
+            <label class="filter-check"><input type="checkbox" id="filterAvailableOnly" /> Available only</label>
+            <label class="filter-check"><input type="checkbox" id="filterAcOnly" /> AC only</label>
+          </div>
         </div>
         <div id="searchResults" class="search-results"></div>
       </section>
