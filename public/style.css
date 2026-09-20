@@ -371,6 +371,67 @@ h1, h2 { font-family: var(--display); }
   margin-top: 16px;
 }
 
+.search-controls { margin-top: 16px; }
+
+.date-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+.date-chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: var(--steel);
+}
+.date-chip .dow { font-weight: 600; letter-spacing: 0.03em; }
+.date-chip .dom { font-family: var(--mono); font-weight: 700; color: var(--ink); font-size: 0.85rem; }
+.date-chip.active {
+  background: linear-gradient(120deg, var(--grad-start), var(--grad-end));
+  border-color: transparent;
+}
+.date-chip.active .dow, .date-chip.active .dom { color: #fff; }
+
+.search-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+.sort-group { display: flex; align-items: center; gap: 6px; }
+.toolbar-label { color: var(--muted); margin-right: 2px; }
+.sort-btn {
+  background: var(--card);
+  color: var(--steel);
+  border: 1px solid var(--line);
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.sort-btn.active { background: var(--purple-tint); color: var(--purple-deep); border-color: var(--purple); }
+.sort-btn:hover { filter: none; background: var(--purple-tint); }
+
+.filter-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--steel);
+  cursor: pointer;
+}
+.filter-check input { width: auto; accent-color: var(--purple); cursor: pointer; }
+
 .train-result {
   display: flex;
   align-items: center;
@@ -395,18 +456,22 @@ h1, h2 { font-family: var(--display); }
 .class-avail {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0 2px;
+  gap: 8px;
+  margin: 6px 0 4px;
 }
 .class-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   font-family: var(--mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px 3px 7px;
-  border-radius: 4px;
+  padding: 5px 10px 5px 9px;
+  border-radius: 8px;
   border: 1px solid transparent;
   border-left: 3px solid var(--steel);
+  min-width: 66px;
 }
+.class-chip .cc-top { display: flex; justify-content: space-between; gap: 8px; font-size: 0.74rem; font-weight: 700; }
+.class-chip .cc-status { font-size: 0.68rem; font-weight: 700; }
 .class-chip.available { background: #e4f6ec; color: #1f6b45; border-color: #bfe8d1; }
 .class-chip.rac { background: #eaf1fb; color: #2a5aa6; border-color: #cddffa; }
 .class-chip.waitlist { background: #fff3dc; color: #7a5410; border-color: #f5dfa8; }
@@ -672,6 +737,15 @@ button:focus-visible { outline: 2px solid var(--coach-red-deep); outline-offset:
 /* ---------- Claim panel ---------- */
 
 .claim-panel { background: transparent; border: none; padding: 0; }
+
+#claimPanel.just-yours .claim-card {
+  animation: justYoursRing 2.4s ease;
+}
+@keyframes justYoursRing {
+  0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+  60% { box-shadow: 0 0 0 18px rgba(124, 58, 237, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
 
 .claim-card {
   background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
